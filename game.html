@@ -10,6 +10,10 @@
 				e.returnValue = confirmationMessage; // For most browsers
 				return confirmationMessage; // For some older browsers
 			});
+			// Notify parent that menu is visible on load
+			window.addEventListener('load', function() {
+				if (window.parent) window.parent.postMessage({ action: 'toggleSaveButton', visible: true }, '*');
+			});
 		</script>
 		<script src="js/pako.js" defer></script>
 		<script src="js/html2canvas.js" defer></script>
@@ -225,14 +229,6 @@
 				onmouseout="this.style.backgroundPosition='top'"
 				onclick="ViewHandBook()"
 			></div>
-			<!-- Save/Load Button -->
-			<div
-				id="saveLoadBtn"
-				style="position:absolute;left:100px;top:530px;width:110px;height:35px;background:linear-gradient(180deg,#4caf50,#2e7d32);border:2px solid #1b5e20;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-family:Arial,sans-serif;font-weight:bold;font-size:14px;box-shadow:2px 2px 5px rgba(0,0,0,0.3);"
-				onmouseover="this.style.background='linear-gradient(180deg,#66bb6a,#43a047)'"
-				onmouseout="this.style.background='linear-gradient(180deg,#4caf50,#2e7d32)'"
-				onclick="PVZSaveSystem.showSaveMenu()"
-			>💾 Save/Load</div>
 				<div id="ZombieHand"></div>
 				<div id="dNameDiv0">
 					<div

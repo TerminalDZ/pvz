@@ -1,0 +1,51 @@
+{
+  "exportVersion": "2.0.0",
+  "exportDate": "2025-12-22T15:57:47.005Z",
+  "gameVersion": 5,
+  "saveData": {
+    "version": "2.0.0",
+    "createdAt": "2025-12-22T15:25:34.023Z",
+    "updatedAt": "2025-12-22T15:57:31.951Z",
+    "profile": {
+      "username": "idris",
+      "avatar": 1,
+      "playTime": 1891
+    },
+    "progress": {
+      "currentLevel": 14,
+      "highestLevel": 14,
+      "completedLevels": [],
+      "unlockedMiniGames": [],
+      "achievements": []
+    },
+    "plants": {
+      "unlocked": [
+        "oPeashooter",
+        "oSunFlower"
+      ],
+      "upgrades": {}
+    },
+    "currency": {
+      "sun": 0,
+      "coins": 0,
+      "diamonds": 0
+    },
+    "statistics": {
+      "zombiesKilled": 0,
+      "plantsPlanted": 0,
+      "sunCollected": 0,
+      "gamesPlayed": 0,
+      "gamesWon": 0,
+      "gamesLost": 0,
+      "totalPlayTime": 1891
+    },
+    "settings": {
+      "autoCollectSun": true,
+      "musicVolume": 100,
+      "sfxVolume": 100,
+      "muteAll": false,
+      "gameSpeed": 1,
+      "language": "en"
+    }
+  }
+}

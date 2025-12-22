@@ -1068,6 +1068,7 @@ const PVZSaveSystem = (function() {
         showSaveMenu,
         requireProfile,
         createFirstProfile,
+        getAllSaves: function() { return _saves; },
         showProfileCreationPrompt
     };
 })();

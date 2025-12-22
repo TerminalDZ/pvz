@@ -261,9 +261,22 @@
         .spacer { flex: 1; }
         
         /* Game Frame */
-        .game-frame {
+        .game-frame-container {
             flex: 1;
-            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0a1a0a 0%, #0d1117 50%, #0a150a 100%);
+            overflow: auto;
+            padding: 10px;
+        }
+        
+        .game-frame {
+            width: 900px;
+            height: 600px;
+            border: 3px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5), 0 0 80px rgba(76,175,80,0.1);
             background: #000;
         }
     </style>
@@ -307,7 +320,8 @@
         </div>
         
         <div class="actions">
-            <button class="btn btn-primary" onclick="openSaveMenu()">💾 Manage Profiles</button>
+<button class="btn btn-primary" id="manageProfilesBtn" onclick="openSaveMenu()">💾 Manage Profiles</button>
+            <button class="btn btn-primary" id="cheatSunBtn" style="display:none; background: linear-gradient(135deg, #FFD700, #FFA500); color: #000;" onclick="spawnCheatSun()">☀️ Cheat Sun</button>
             <button class="btn btn-secondary" onclick="goFullscreen()">⛶ Fullscreen</button>
             <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh Stats</button>
         </div>
@@ -334,11 +348,13 @@
     <main class="game-area">
         <div class="game-header">
             <button class="toggle-btn" onclick="toggleSidebar()" title="Toggle Panel">☰</button>
-            <span class="game-title">Plants vs. Zombies</span>
+            <span class="game-title">Plants vs. Zombies MODDED</span>
             <div class="spacer"></div>
             <button class="toggle-btn" onclick="goFullscreen()" title="Fullscreen">⛶</button>
         </div>
-        <iframe id="gameFrame" class="game-frame" src="game.html"></iframe>
+        <div class="game-frame-container">
+            <iframe id="gameFrame" class="game-frame" src="game.html" scrolling="no"></iframe>
+        </div>
     </main>
     
     <script>
@@ -392,10 +408,32 @@
         
         // Listen for messages from game
         window.addEventListener('message', function(e) {
-            if (e.data && e.data.action === 'profileUpdated') {
-                refreshStats();
+            if (e.data) {
+                if (e.data.action === 'profileUpdated') {
+                    refreshStats();
+                } else if (e.data.action === 'toggleSaveButton') {
+                    const btn = document.getElementById('manageProfilesBtn');
+                    if (btn) btn.style.display = e.data.visible ? 'flex' : 'none';
+                    
+                    // Also hide cheat button when returning to menu (visible=true means we are at menu)
+                    if (e.data.visible) {
+                        const cheatBtn = document.getElementById('cheatSunBtn');
+                        if (cheatBtn) cheatBtn.style.display = 'none';
+                    }
+                } else if (e.data.action === 'levelStart') {
+                    const cheatBtn = document.getElementById('cheatSunBtn');
+                    if (cheatBtn) {
+                        // Show only if level has sun
+                        cheatBtn.style.display = e.data.hasSun ? 'flex' : 'none';
+                    }
+                }
             }
         });
+
+        function spawnCheatSun() {
+            const frame = document.getElementById('gameFrame');
+            frame.contentWindow.postMessage({ action: 'cheatSpawnSun' }, '*');
+        }
         
         // Auto refresh
         setInterval(refreshStats, 3000);

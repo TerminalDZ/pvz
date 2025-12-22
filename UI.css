@@ -2244,3 +2244,28 @@ button.jhp:focus {
 	border: 1px solid #4d90fe;
 	outline: 0;
 }
+
+/* Manage Profiles Button Styles */
+.btn {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: url(images/interface/Pointer.cur), pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4caf50, #1a3a15);
+    color: white;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+}

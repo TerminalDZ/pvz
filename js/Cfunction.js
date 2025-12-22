@@ -59,7 +59,18 @@ var $User = (function () {
 			SaveLvlCallBack: null,
 		},
 	};
+
 })();
+
+// Global listener for cheats
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.action === 'cheatSpawnSun') {
+        if (typeof AppearSun === 'function' && typeof oS !== 'undefined') {
+             // Spawn sun at random position: x=100-900, y=100-500, value=50
+            AppearSun(Math.floor(100 + Math.random() * 800), Math.floor(100 + Math.random() * 400), 50, 0);
+        }
+    }
+});
 var oSym = {
 	// initialize the symbol object
 	Init(b, a) {
@@ -246,6 +257,25 @@ var oS = {
 			"Peashooters shoot peas",
 		];
 		b.innerHTML = '<span style="font-weight:bold"></span><span>' + a[Math.floor(Math.random() * a.length)] + "</span>";
+		
+		// Notify parent about sun status
+		if (window.parent) {
+		    var isMenu = !oS.Lvl; 
+		    var hasSun = !isMenu && (oS.ProduceSun || typeof oS.SunNum !== 'undefined');
+		    
+		    // Get current user stats if available
+		    var userStats = {};
+		    if (typeof PVZSaveSystem !== 'undefined' && PVZSaveSystem.getCurrentUser()) {
+		        var save = PVZSaveSystem.getAllSaves()[PVZSaveSystem.getCurrentUser()];
+		        if (save) userStats = save.statistics;
+		    }
+		    
+		    window.parent.postMessage({ 
+		        action: 'levelStart', 
+		        hasSun: hasSun,
+		        stats: userStats
+		    }, '*');
+		}
 	},
 	LoadProgress(r, l, a, t, b) {
 		SetVisible($("dFlagMeter"));
@@ -748,7 +778,8 @@ var oP = {
 			if (typeof PVZSaveSystem !== 'undefined' && PVZSaveSystem.getCurrentUser()) {
 				PVZSaveSystem.onLevelComplete(oS.Lvl, {
 					sunCollected: oS.SunNum,
-					coinsEarned: 50
+					coinsEarned: 50,
+					zombiesKilled: oS.ZombiesKilled || 0
 				});
 			}
 			NewImg("imgSF", "images/interface/trophy.png", "left:417px;top:233px;z-index:255", EDAll, {
@@ -2060,6 +2091,7 @@ var lastB;
 	(ViewPlantTitle = function (b) {
 		var f = $("dTitle");
 		var e = ArCard[b];
+		if (!e) return;
 		var c = e.PName.prototype;
 		var a = c.CName;
 		!oS.CardKind && ((a += "<br>cooldown: " + c.coolTime + "s<br>" + c.Tooltip), !e.CDReady && (a += '<br><span style="color:#F00">recharging</span>'));
@@ -2120,7 +2152,9 @@ var lastB;
 				(c = (d = ArCard[b]).PName.prototype).SunNum > oS.SunNum ? d.SunReady && (d.SunReady = 0) : !d.SunReady && (d.SunReady = 1);
 			}
 		}
-		ViewPlantTitle(oS.MCID);
+		if (oS.MCID) {
+			ViewPlantTitle(oS.MCID);
+		}
 	}),
 	(DoCoolTimer = function (c, b) {
 		var a = $(ArCard[c].DID);
@@ -2714,6 +2748,7 @@ var lastB;
 		oS.GlobalVariables = {};
 		oS.LvlVariables = {};
 		oS.SelfVariables.length = 0;
+		oS.ZombiesKilled = 0; // Initialize kill counter
 		SetHidden($("dCardList"), $("tGround"), $("dSelectCard"), $("dTop"), $("dMenu"), $("dHandBook"), $("dNewPlant"), $("dProcess"));
 		SetNone($("dSurface"), $("iSurfaceBackground"));
 		ClearChild($("dFlagMeterTitleB").firstChild);
@@ -2962,7 +2997,12 @@ var lastB;
 	(SetBlock = function () {
 		var a = arguments.length;
 		while (a--) {
-			arguments[a].style.display = "block";
+			if (arguments[a] && arguments[a].style) {
+				arguments[a].style.display = "block";
+				if (arguments[a].id === "dSurface") {
+					window.parent.postMessage({ action: "toggleSaveButton", visible: true }, "*");
+				}
+			}
 		}
 	}),
 	(SetNone = function () {
@@ -2970,6 +3010,9 @@ var lastB;
 		while (a--) {
 			if (arguments[a] && arguments[a].style) {
 				arguments[a].style.display = "none";
+				if (arguments[a].id === "dSurface") {
+					window.parent.postMessage({ action: "toggleSaveButton", visible: false }, "*");
+				}
 			}
 		}
 	}),

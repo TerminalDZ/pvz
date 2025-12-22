@@ -150,31 +150,36 @@ let checkInterval = setInterval(() => {
 					console.log(`Change detected: ${previousValue} to ${oS.Lvl}`);
 					previousValue = oS.Lvl;
 					console.log(`New previousValue set to: ${previousValue}`);
+					
+					// Smart Level Tracking
+					let bestLevel = oS.Lvl;
+					if (typeof PVZSaveSystem !== 'undefined') {
+					    const u = PVZSaveSystem.getCurrentUser();
+					    if (u) {
+					        const saves = PVZSaveSystem.getAllSaves();
+					        // Handle case sensitivity or missing user key
+					        const userSave = saves[u] || saves[u.toLowerCase()] || saves[Object.keys(saves).find(k => k.toLowerCase() === u.toLowerCase())];
+					        
+					        console.log(`[Custom.js Debug] User: ${u}, SaveFound:`, !!userSave);
+					        
+					        if (userSave && userSave.progress) {
+					            const savedHigh = userSave.progress.highestLevel || 1;
+					            console.log(`[Custom.js Debug] Found highestLevel: ${savedHigh} (Active Level: ${oS.Lvl})`);
+					            bestLevel = Math.max(bestLevel, savedHigh);
+					        }
+					    } else {
+					        console.log(`[Custom.js Debug] No current user found. Waiting...`);
+					    }
+					}
+					
 					if ($ && $("dAdventure")) {
-						let hLvl = oS.Lvl;
-						console.log(`Setting onclick with level: ${hLvl}`);
-						if (saveWhitelist.includes(hLvl)) {
+						console.log(`Setting onclick with best level: ${bestLevel}`);
+						if (saveWhitelist.includes(bestLevel)) {
 							$("dAdventure").onclick = function () {
-								console.log(`Starting adventure with level: ${hLvl}`);
-								StartAdventure(hLvl);
-							};
-						} else if (typeof localStorage.getItem("level") === "undefined") {
-							$("dAdventure").onclick = function () {
-								console.log("Starting adventure with level: " + localStorage.getItem("level") + " (from localStorage)");
-								StartAdventure(localStorage.getItem("level"));
-							};
-						} else {
-							$("dAdventure").onclick = function () {
-								console.log("Starting adventure with level: 1");
-								StartAdventure(1);
+								console.log(`Starting adventure with level: ${bestLevel}`);
+								StartAdventure(bestLevel);
 							};
 						}
-					}
-					if (saveWhitelist.includes(oS.Lvl)) {
-						console.log(`Saving level ${oS.Lvl} to localStorage.`);
-						localStorage.setItem("level", oS.Lvl);
-					} else {
-						console.log(`Level ${oS.Lvl} isn't whitelisted, not saving to localStorage.`);
 					}
 				}
 			}
@@ -185,18 +190,41 @@ let checkInterval = setInterval(() => {
 	}
 }, 100);
 
+// Note: startInterval2() is called from level/0.js
 function startInterval2() {
 	let checkInterval2 = setInterval(() => {
-		/*console.log(
-            "Checking if dAdventure is defined and saved level exists & is not blacklisted..."
-        );*/
-		if ($("dAdventure") && localStorage.getItem("level") && saveWhitelist.includes(localStorage.getItem("level"))) {
-			console.log("dAdventure is defined and level is valid, setting onclick...");
-			$("dAdventure").onclick = function () {
-				console.log(`Starting adventure with level from localStorage: ${localStorage.getItem("level")}`);
-				StartAdventure(localStorage.getItem("level"));
-			};
-			clearInterval(checkInterval2);
+		if ($("dAdventure")) {
+		    // Priority 1: Check Modern Save System
+		    if (typeof PVZSaveSystem !== 'undefined') {
+		        const userId = PVZSaveSystem.getCurrentUser();
+		        // Initial load of saves if empty (fallback)
+		        if (!userId && localStorage.getItem('PVZ_GAME_SAVES')) {
+		             PVZSaveSystem.init(); 
+		        }
+		        
+		        if (userId) {
+		            const saves = PVZSaveSystem.getAllSaves();
+		            if (saves[userId] && saves[userId].progress) {
+		                const lvl = saves[userId].progress.highestLevel || 1;
+		                console.log(`[PVZ Save System] Resuming adventure from level: ${lvl}`);
+		                $("dAdventure").onclick = function () {
+		                    StartAdventure(lvl);
+		                };
+		                clearInterval(checkInterval2);
+		                return;
+		            }
+		        }
+		    }
+
+		    // Priority 2: Fallback to old localStorage
+			if (localStorage.getItem("level") && saveWhitelist.includes(localStorage.getItem("level"))) {
+    			console.log("Fallback: dAdventure is defined and level is valid, setting onclick...");
+    			$("dAdventure").onclick = function () {
+    				console.log(`Starting adventure with level from localStorage: ${localStorage.getItem("level")}`);
+    				StartAdventure(localStorage.getItem("level"));
+    			};
+    			clearInterval(checkInterval2);
+			}
 		}
 	}, 100);
 }

@@ -437,6 +437,7 @@ var CZombies = (function (b, a) {
 				c.HP = 0;
 				delete $Z[c.id];
 				c.PZ && oP.MonPrgs();
+				!c.isPuppet && oS.ZombiesKilled++;
 			},
 			ExplosionDie() {
 				var c = this;
@@ -445,12 +446,14 @@ var CZombies = (function (b, a) {
 				c.HP = 0;
 				delete $Z[c.id];
 				c.PZ && oP.MonPrgs();
+				!c.isPuppet && oS.ZombiesKilled++;
 			},
 			DisappearDie() {
 				ClearChild(this.Ele);
 				this.HP = 0;
 				delete $Z[this.id];
 				this.PZ && oP.MonPrgs();
+				!this.isPuppet && oS.ZombiesKilled++;
 			},
 			CrushDie() {
 				var c = this;
@@ -459,6 +462,7 @@ var CZombies = (function (b, a) {
 				c.HP = 0;
 				delete $Z[c.id];
 				c.PZ && oP.MonPrgs();
+				!c.isPuppet && oS.ZombiesKilled++;
 			},
 			GoingDieHead(e, c, d) {
 				oSym.addTask(200, ClearChild, [
