@@ -153,24 +153,48 @@ let checkInterval = setInterval(() => {
 					
 					// Smart Level Tracking
 					let bestLevel = oS.Lvl;
-					if (typeof PVZSaveSystem !== 'undefined') {
-					    const u = PVZSaveSystem.getCurrentUser();
-					    if (u) {
-					        const saves = PVZSaveSystem.getAllSaves();
-					        // Handle case sensitivity or missing user key
-					        const userSave = saves[u] || saves[u.toLowerCase()] || saves[Object.keys(saves).find(k => k.toLowerCase() === u.toLowerCase())];
-					        
-					        console.log(`[Custom.js Debug] User: ${u}, SaveFound:`, !!userSave);
-					        
-					        if (userSave && userSave.progress) {
-					            const savedHigh = userSave.progress.highestLevel || 1;
-					            console.log(`[Custom.js Debug] Found highestLevel: ${savedHigh} (Active Level: ${oS.Lvl})`);
-					            bestLevel = Math.max(bestLevel, savedHigh);
-					        }
-					    } else {
-					        console.log(`[Custom.js Debug] No current user found. Waiting...`);
+					// Smart Level Tracking
+					let bestLevel = oS.Lvl;
+					// Persistent check for Save System (it might load async)
+					const updateBestLevel = () => {
+					    if (typeof PVZSaveSystem !== 'undefined') {
+    					    const u = PVZSaveSystem.getCurrentUser();
+    					    if (u) {
+    					        const saves = PVZSaveSystem.getAllSaves();
+    					        // Handle case sensitivity or missing user key
+    					        const userSave = saves[u] || saves[u.toLowerCase()] || saves[Object.keys(saves).find(k => k.toLowerCase() === u.toLowerCase())];
+    					        
+    					        if (userSave && userSave.progress) {
+    					            const savedHigh = userSave.progress.highestLevel || 1;
+    					            // console.log(`[Custom.js Debug] Found highestLevel: ${savedHigh}`);
+    					            return Math.max(oS.Lvl, savedHigh);
+    					        }
+    					    }
 					    }
+					    return bestLevel; // Fallback
+					};
+					
+					bestLevel = updateBestLevel();
+					
+					// If we still didn't find a user, set a timeout to re-check
+					if (bestLevel === 1 && typeof PVZSaveSystem === 'undefined') {
+					    setTimeout(() => {
+					        const retryLevel = updateBestLevel();
+					        if (retryLevel > 1 && $("dAdventure")) {
+					            // console.log("Retrying adventure button set with level: " + retryLevel);
+					            $("dAdventure").onclick = function() { StartAdventure(retryLevel); };
+					             $("dAdventure").innerHTML = '<div style="font-size: 16px;text-align: center;margin-top: 50px;color: #000;font-family: Dwarf, sans-serif;">Level ' + retryLevel + '</div>';
+					        }
+					    }, 1000);
 					}
+					
+					// Also listen for save system ready event if possible
+					window.addEventListener('pvz-save-loaded', () => {
+					     const lateLevel = updateBestLevel();
+					     if (lateLevel > 1 && $("dAdventure")) {
+					         $("dAdventure").onclick = function() { StartAdventure(lateLevel); };
+					     }
+					});
 					
 					if ($ && $("dAdventure")) {
 						console.log(`Setting onclick with best level: ${bestLevel}`);
