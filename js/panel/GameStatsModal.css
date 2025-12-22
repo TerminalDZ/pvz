@@ -1,0 +1,285 @@
+/* Game Stats - Floating Widget & Top Bar */
+
+/* --- Top Bar --- */
+#topBarOverlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 0; /* Pass-through clicks */
+    z-index: 2000;
+    pointer-events: none;
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 25px;
+}
+
+#topBarOverlay .btn {
+    pointer-events: auto; /* Re-enable clicks for buttons */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
+}
+
+/* Sidebar button override when in top bar */
+#gameStatsBtn {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#gameStatsBtn:hover {
+    background: rgba(45, 55, 72, 0.95);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+/* --- Widget Overlay (Base) --- */
+.game-stats-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Let clicks pass through to game */
+    z-index: 1500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.game-stats-overlay.active {
+    opacity: 1;
+}
+
+/* --- Widget Container --- */
+.game-stats-modal {
+    position: fixed;
+    bottom: 20px; /* Default starting position */
+    right: 20px;
+    width: 320px;
+    background: rgba(13, 17, 23, 0.95);
+    border: 1px solid rgba(48, 54, 61, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    color: #c9d1d9;
+    font-family: 'Inter', sans-serif;
+    pointer-events: auto; /* Enable interaction with widget */
+    
+    /* Animation */
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.game-stats-overlay.active .game-stats-modal {
+    transform: translateY(0);
+}
+
+/* --- Header (Draggable) --- */
+.game-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    cursor: move; /* Indicate draggable */
+    user-select: none;
+}
+
+.game-stats-header h2 {
+    font-size: 14px;
+    margin: 0;
+    font-weight: 600;
+    color: #f0f6fc;
+}
+
+.game-stats-close {
+    background: none;
+    border: none;
+    color: #8b949e;
+    font-size: 16px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.game-stats-close:hover {
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
+}
+
+/* --- Content Area --- */
+.game-stats-content {
+    padding: 16px;
+    max-height: 400px; /* Limit height if many cards */
+    overflow-y: auto;
+}
+
+/* Scrollbar Style */
+.game-stats-content::-webkit-scrollbar {
+    width: 6px;
+}
+.game-stats-content::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+}
+.game-stats-content::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+/* --- Sun Stats Grid --- */
+.sun-stats-section {
+    margin-bottom: 20px;
+}
+
+.sun-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.sun-stat-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.sun-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.sun-stat-label {
+    font-size: 11px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Cards Section --- */
+.cards-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.cards-section-header h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8b949e;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+/* --- Card Items (The main request focus) --- */
+.card-item {
+    background: rgba(22, 27, 34, 0.5);
+    border: 1px solid rgba(48, 54, 61, 0.5);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.card-item img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    margin-bottom: 4px;
+    /* Default: Color (Affordable) */
+    filter: none;
+    transition: filter 0.3s ease;
+}
+
+.card-cost {
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(0,0,0,0.5);
+    padding: 2px 6px;
+    border-radius: 10px;
+    color: #ffd700; /* Gold for cost */
+}
+
+/* State: Unaffordable (Gray) */
+.card-item.unaffordable img {
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+
+.card-item.unaffordable .card-cost {
+    color: #ff6b6b; /* Red text for too expensive */
+}
+
+/* State: Cooldown (Darkened) */
+.card-item.cooldown img {
+    filter: brightness(0.5); /* Just dark, but colored */
+}
+
+.card-item.cooldown::after {
+    content: '⌛';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -65%);
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+/* --- Loading / Empty States --- */
+.loading-state, .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 0;
+    color: #8b949e;
+    gap: 10px;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(76, 175, 80, 0.3);
+    border-top: 2px solid #4caf50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

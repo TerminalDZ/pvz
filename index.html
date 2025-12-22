@@ -6,6 +6,8 @@
     <title>Plants vs. Zombies MODDED</title>
     <link rel="icon" href="images/interface/Sunflower_trophy32.png" type="image/png">
     <meta name="theme-color" content="#2d5a27">
+    <link rel="stylesheet" href="js/panel/GameStatsModal.css">
+    <link rel="stylesheet" href="js/panel/GameMapModal.css">
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -320,8 +322,9 @@
         </div>
         
         <div class="actions">
-<button class="btn btn-primary" id="manageProfilesBtn" onclick="openSaveMenu()">💾 Manage Profiles</button>
+            <button class="btn btn-primary" id="manageProfilesBtn" onclick="openSaveMenu()">💾 Manage Profiles</button>
             <button class="btn btn-primary" id="cheatSunBtn" style="display:none; background: linear-gradient(135deg, #FFD700, #FFA500); color: #000;" onclick="spawnCheatSun()">☀️ Cheat Sun</button>
+            <!-- Game Stats button moved to top bar -->
             <button class="btn btn-secondary" onclick="goFullscreen()">⛶ Fullscreen</button>
             <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh Stats</button>
         </div>
@@ -418,7 +421,7 @@
                     // Also hide cheat button when returning to menu (visible=true means we are at menu)
                     if (e.data.visible) {
                         const cheatBtn = document.getElementById('cheatSunBtn');
-                        if (cheatBtn) cheatBtn.style.display = 'none';
+                        if (cheatBtn) cheatBtn.style.display = ' ';
                     }
                 } else if (e.data.action === 'levelStart') {
                     const cheatBtn = document.getElementById('cheatSunBtn');
@@ -440,5 +443,13 @@
         document.addEventListener('DOMContentLoaded', refreshStats);
         window.addEventListener('storage', refreshStats);
     </script>
+    <!-- Top Bar Overlay -->
+    <div id="topBarOverlay">
+        <button class="btn btn-game-stats" id="gamePanelBtn" style="display:none;" onclick="GameStatsModal.open(); GameMapModal.open();">📊 Game Panel</button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/panel/GameStatsModal.js"></script>
+    <script src="js/panel/GameMapModal.js"></script>
 </body>
 </html>

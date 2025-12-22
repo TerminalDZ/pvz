@@ -1,0 +1,336 @@
+/* Game Map Widget - Floating Real-time Grid */
+
+/* --- Widget Container (Floating, Draggable) --- */
+.game-map-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Pass-through clicks */
+    z-index: 1500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.game-map-overlay.active {
+    opacity: 1;
+}
+
+/* --- Widget Container --- */
+.game-map-modal {
+    position: fixed;
+    top: 70px; /* Below top bar */
+    left: 20px;
+    width: 720px;
+    max-height: 400px;
+    background: rgba(13, 17, 23, 0.95);
+    border: 1px solid rgba(48, 54, 61, 0.8);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    color: #c9d1d9;
+    font-family: 'Inter', sans-serif;
+    pointer-events: auto; /* Enable interaction */
+    
+    /* Animation */
+    transform: translateX(-20px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.game-map-overlay.active .game-map-modal {
+    transform: translateX(0);
+}
+
+/* --- Header (Draggable) --- */
+.game-map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    cursor: move;
+    user-select: none;
+}
+
+.game-map-header h2 {
+    font-size: 13px;
+    margin: 0;
+    font-weight: 600;
+    color: #f0f6fc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.game-map-header .stats-badge {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.game-map-header .plant-badge {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.game-map-close {
+    background: none;
+    border: none;
+    color: #8b949e;
+    font-size: 14px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.game-map-close:hover {
+    background: rgba(248, 81, 73, 0.2);
+    color: #f85149;
+}
+
+/* --- Content Area --- */
+.game-map-content {
+    padding: 12px;
+    overflow: auto;
+    max-height: 340px;
+}
+
+/* Scrollbar */
+.game-map-content::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.game-map-content::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+}
+.game-map-content::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+/* --- Grid Container --- */
+.map-grid-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+/* --- Column Headers --- */
+.map-grid-header {
+    display: flex;
+    gap: 1px;
+    margin-bottom: 2px;
+}
+
+.map-col-label {
+    min-width: 48px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: #8b949e;
+}
+
+.map-col-label.house {
+    background: rgba(255, 100, 100, 0.15);
+    color: #ff6b6b;
+    border-radius: 3px;
+}
+
+.map-col-label.spawn {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border-radius: 3px;
+}
+
+/* --- Grid Row --- */
+.map-grid-row {
+    display: flex;
+    gap: 1px;
+}
+
+/* --- Row Label --- */
+.map-row-label {
+    min-width: 36px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: #8b949e;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 3px;
+}
+
+.map-row-label.land {
+    border-left: 2px solid #4caf50;
+}
+
+.map-row-label.water {
+    border-left: 2px solid #2196f3;
+    background: rgba(33, 150, 243, 0.08);
+}
+
+.map-row-label.blocked {
+    border-left: 2px solid #666;
+    opacity: 0.5;
+}
+
+/* --- Grid Cell --- */
+.map-cell {
+    min-width: 48px;
+    height: 40px;
+    background: rgba(76, 175, 80, 0.05);
+    border: 1px solid rgba(76, 175, 80, 0.1);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.map-cell.water {
+    background: rgba(33, 150, 243, 0.1);
+    border-color: rgba(33, 150, 243, 0.2);
+}
+
+.map-cell.blocked {
+    background: rgba(100, 100, 100, 0.08);
+    border-color: rgba(100, 100, 100, 0.15);
+}
+
+.map-cell.house {
+    background: rgba(255, 100, 100, 0.1);
+    border-color: rgba(255, 100, 100, 0.2);
+}
+
+.map-cell.spawn {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.map-cell.lawnmower {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.2);
+}
+
+/* --- Entity Icons --- */
+.map-entity {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+
+.map-entity.zombie {
+    filter: drop-shadow(0 0 3px rgba(139, 92, 246, 0.5));
+}
+
+.map-entity.plant {
+    filter: drop-shadow(0 0 3px rgba(76, 175, 80, 0.5));
+}
+
+/* Multiple entities */
+.map-cell-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+    max-width: 100%;
+}
+
+.map-cell-stack .map-entity {
+    width: 16px;
+    height: 16px;
+}
+
+/* Entity count badge */
+.entity-count {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 600;
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+
+/* --- Legend (Compact) --- */
+.map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(48, 54, 61, 0.5);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #8b949e;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.legend-color.land { background: rgba(76, 175, 80, 0.3); }
+.legend-color.water { background: rgba(33, 150, 243, 0.3); }
+.legend-color.house { background: rgba(255, 100, 100, 0.3); }
+.legend-color.spawn { background: rgba(139, 92, 246, 0.3); }
+
+/* --- Loading State --- */
+.map-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    color: #8b949e;
+    gap: 10px;
+}
+
+.map-loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(76, 175, 80, 0.2);
+    border-top: 2px solid #4caf50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
