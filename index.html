@@ -1,1062 +1,406 @@
-<html>
-	<head>
-		<link rel="stylesheet" href="Custom.css" />
-		<meta http-equiv="X-Frame-Options" content="DENY" />
-		<title>Plants vs. Zombies MODDED Official</title>
-		<link rel="icon" href="https://terminaldz.github.io/pvz/game/images/gameicon2.png" type="image/png" />
-		<script>
-			window.addEventListener("beforeunload", function (e) {
-				var confirmationMessage = "Are you sure you want to leave? Progress does not save and any progress will be lost.";
-				e.returnValue = confirmationMessage; // For most browsers
-				return confirmationMessage; // For some older browsers
-			});
-		</script>
-		<script src="js/pako.js" defer></script>
-		<script src="js/html2canvas.js" defer></script>
-		<!-- compression library for izombie lvl saving -->
-		<script src="js/SaveSystem.js" defer></script>
-		<script src="js/Custom.js" defer></script>
-		<script src="js/Cheatcodes.js" defer></script>
-		<meta property="og:title" content="Play Plants vs Zombies Modded Online" />
-		<meta
-			property="og:description"
-			content="Play Plants vs Zombies Modded here for Free - A tower defense game created by PopCap Games and released on May 5, 2009. Click to Play now! Mod by TerminalDZ on Github."
-		/>
-		<meta property="og:url" content="https://terminaldz.github.io/pvz/" />
-		<meta property="og:site_name" content="TerminalDZ" />
-		<meta property="og:image" content="https://terminaldz.github.io/pvz/images/gamethumbnail5.png" />
-		<meta property="og:image:alt" content="Plants vs. Zombies MODDED" />
-		<meta property="og:image:type" content="image/png" />
-		<meta name="twitter:card" content="summary_large_image" />
-		<meta name="theme-color" content="#ff2200" />
-		<meta name="twitter:title" content="Play Plants vs. Zombies Modded Online" />
-		<meta name="twitter:description" content="Play Plants vs. Zombie Modded here for Free - Mod by TerminalDZ on Github." />
-		<meta name="twitter:image" content="https://terminaldz.github.io/pvz/images/gamethumbnail5.png" />
-		<link rel="stylesheet" href="UI.css" />
-		<!-- REMOVE THIS SCRIPT AFTER REFACTOR IS DONE -->
-		<script>
-			function replaceSingleFontTag(fontElement) {
-				if (!fontElement || !fontElement.parentNode || fontElement.tagName !== "FONT") {
-					return;
-				}
-
-				const fontSizeMap = {
-					1: "x-small",
-					2: "small",
-					3: "medium",
-					4: "large",
-					5: "x-large",
-					6: "xx-large",
-					7: "xxx-large",
-				};
-
-				const spanElement = document.createElement("span");
-
-				spanElement.innerHTML = fontElement.innerHTML;
-
-				const color = fontElement.getAttribute("color");
-				if (color) {
-					spanElement.style.color = color;
-				}
-				const size = fontElement.getAttribute("size");
-				if (size && fontSizeMap[size]) {
-					spanElement.style.fontSize = fontSizeMap[size];
-				}
-				const face = fontElement.getAttribute("face");
-				if (face) {
-					spanElement.style.fontFamily = face;
-				}
-
-				console.log("Replacing <font> tag:", fontElement);
-				fontElement.replaceWith(spanElement);
-			}
-
-			function replaceExistingFontTags() {
-				const existingFonts = document.querySelectorAll("font");
-				let replacedCount = 0;
-				existingFonts.forEach((font) => {
-					if (font.parentNode) {
-						replaceSingleFontTag(font);
-						replacedCount++;
-					}
-				});
-				if (replacedCount > 0) {
-					console.log(`Replaced ${replacedCount} initially present <font> tag(s).`);
-				} else {
-					console.log("No initial <font> tags found to replace.");
-				}
-			}
-
-			const mutationCallback = (mutationsList, observer) => {
-				for (const mutation of mutationsList) {
-					if (mutation.type === "childList") {
-						mutation.addedNodes.forEach((node) => {
-							if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "FONT") {
-								replaceSingleFontTag(node);
-							} else if (node.nodeType === Node.ELEMENT_NODE && node.querySelectorAll) {
-								const nestedFonts = node.querySelectorAll("font");
-								nestedFonts.forEach(replaceSingleFontTag);
-							}
-						});
-					} else if (mutation.type === "attributes") {
-						if (mutation.target.nodeType === Node.ELEMENT_NODE && mutation.target.tagName === "FONT") {
-							console.log(`Attribute '${mutation.attributeName}' changed on:`, mutation.target);
-							replaceSingleFontTag(mutation.target);
-						}
-					}
-				}
-			};
-
-			const observer = new MutationObserver(mutationCallback);
-
-			const config = {
-				childList: true,
-				subtree: true,
-				attributes: true,
-				attributeFilter: ["color", "size", "face"],
-			};
-
-			// Function to start the process
-			function initializeFontReplacement() {
-				replaceExistingFontTags();
-
-				observer.observe(document.body, config);
-
-				console.log("MutationObserver started, watching for new <font> tags and attribute changes.");
-			}
-
-			document.addEventListener("DOMContentLoaded", initializeFontReplacement);
-		</script>
-	</head>
-
-	<body id="dBody" topmargin="0" leftmargin="0" oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
-
-		<script src="oneko.js"></script>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-CYNM3PNQXE"></script> -->
-		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag() {
-				dataLayer.push(arguments);
-			}
-			gtag("js", new Date());
-
-			gtag("config", "G-CYNM3PNQXE");
-		</script>
-		<!--   <div id="preloader"> -->
-		<!--	    <div id="status" class="WindowFrame"></div> -->
-		<!--    </div> -->
-		<script src="js/Cfunction.js"></script>
-		<script src="js/Welcome.js"></script>
-		<div id="dFlagMeter">
-			<div id="dFlagMeterTitle">
-				<div id="dFlagMeterTitleB"></div>
-				<div id="sFlagMeterTitleF"></div>
-			</div>
-			<div id="dFlagMeterContent">
-				<img id="imgFlagMeterEmpty" src="images/interface/FlagMeterEmpty.png" />
-				<img id="imgFlagMeterFull" src="images/interface/FlagMeterFull.png" />
-				<img class="flag" id="imgFlag1" src="images/interface/FlagMeterParts2.png" />
-				<img class="flag" id="imgFlag2" src="images/interface/FlagMeterParts2.png" />
-				<img class="flag" id="imgFlag3" src="images/interface/FlagMeterParts2.png" />
-				<img class="flag" id="imgFlag4" src="images/interface/FlagMeterParts2.png" />
-				<img id="imgGQJC" src="images/interface/FlagMeterLevelProgress.png" />
-				<img id="imgFlagHead" src="images/interface/FlagMeterParts1.png" />
-			</div>
-		</div>
-		<div id="dSurface" class="WindowFrame">
-			<div id="iSurfaceBackground">
-				<map name="FPMap0">
-					<script>
-						(function () {
-							var s = "",
-								ar = [
-									{
-										c: "641,466,724,527",
-										k: "ShowOptions()",
-									},
-									{ c: "718,512,790,558", k: "ShowHelp()" },
-									{
-										c: "800,495,879,548",
-										k: "SetNone($('dSurface'));PlayAudio('tap')",
-									},
-								];
-							for (var i = 0; i <= 2; i++) s += '<area href="javascript:;" shape="rect" coords="' + ar[i].c + '" onclick="' + ar[i].k + '">';
-							document.write(s);
-						})();
-					</script>
-				</map>
-				<img src="images/interface/Surface.jpg" usemap="#FPMap0" border="0" />
-				<div style="position: absolute; width: 350px; height: 150px; left: 468px; top: 82px"></div>
-				<div
-					class="adventure0"
-					id="dAdventure"
-					onmouseover="this.style.backgroundPosition='bottom';"
-					onmouseout="this.style.backgroundPosition='top'"
-					onclick="StartAdventure()"
-				></div>
-				<div style="position: absolute; width: 318px; height: 136px; left: 476px; top: 208px"></div>
-				<div
-					class="mini"
-					onmouseover="this.style.backgroundPosition='bottom';"
-					onmouseout="this.style.backgroundPosition='top'"
-					onclick="ShowMiniGame()"
-				></div>
-				<div style="position: absolute; width: 289px; height: 127px; left: 480px; top: 307px"></div>
-				<div
-					class="riddle"
-					onmouseover="this.style.backgroundPosition='bottom';"
-					onmousemove='ViewGenericMouseover(`<span style="color:red	"><b>NEW!</b></span> Custom I, Zombie Levels!`,event)'
-					onmouseout="SetHidden($('dTitle'))"
-					onmouseout="this.style.backgroundPosition='top'"
-					onclick="ShowRiddleGame()"
-				></div>
-				<div class="Sunflower_trophy">
-					<script>
-						document.write(
-							'<img onclick="window.open(\'https://github.com/terminaldz/pvz\')" title="Producer" alt="3" src="images/interface/Sunflower_trophy32.png">'
-						);
-					</script>
-				</div>
-				<div
-				class="handbook"
-				onmouseover="this.style.backgroundPosition='bottom'"
-				onmouseout="this.style.backgroundPosition='top'"
-				onclick="ViewHandBook()"
-			></div>
-			<!-- Save/Load Button -->
-			<div
-				id="saveLoadBtn"
-				style="position:absolute;left:100px;top:530px;width:110px;height:35px;background:linear-gradient(180deg,#4caf50,#2e7d32);border:2px solid #1b5e20;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-family:Arial,sans-serif;font-weight:bold;font-size:14px;box-shadow:2px 2px 5px rgba(0,0,0,0.3);"
-				onmouseover="this.style.background='linear-gradient(180deg,#66bb6a,#43a047)'"
-				onmouseout="this.style.background='linear-gradient(180deg,#4caf50,#2e7d32)'"
-				onclick="PVZSaveSystem.showSaveMenu()"
-			>💾 Save/Load</div>
-				<div id="ZombieHand"></div>
-				<div id="dNameDiv0">
-					<div
-						id="dNameDiv1"
-						onmouseover="this.style.backgroundPosition='bottom'"
-						onmouseout="this.style.backgroundPosition='top'"
-						onclick="ShowLoginDiv()"
-					></div>
-					<div id="dNameDiv2"></div>
-				</div>
-			</div>
-			<div id="dPause">
-				<table border="0" width="434" cellspacing="0" cellpadding="0" height="484">
-					<tr>
-						<td width="107" height="142" valign="bottom">
-							<img border="0" src="images/interface/dialog_topleft.png" width="423" height="401" />
-						</td>
-					</tr>
-				</table>
-				<div class="list">
-					<div class="hidden" onclick="SetNone($('dSurface'),$('dPause'))"></div>
-					<div id="dPauseAD"></div>
-				</div>
-				<div class="button" onclick="ResetGame($('dMenu0'))">Back To Game</div>
-			</div>
-			<div id="dZombieFail">
-				<table border="0" width="434" cellspacing="0" cellpadding="0" height="484">
-					<tr>
-						<td width="107" height="142" valign="bottom">
-							<img border="0" src="images/interface/dialog_topleft.png" width="423" height="401" />
-						</td>
-					</tr>
-				</table>
-				<div class="list">
-					<div class="hidden" onclick="SetNone($('dSurface'),$('dZombieFail'))"></div>
-					<div id="dZombieFailAD"></div>
-				</div>
-				<div class="button" onclick="ResetGame($('dMenu0'))">Back To Game</div>
-			</div>
-			<div id="dSurfaceBack">
-				<div id="dHelp" onclick="HiddenHelp()"></div>
-				<div id="dOptionsMenuback">
-					<div id="dOptionsMenu">
-						<div class="OMd0">
-							<div class="OMd1">
-								<div>
-									<input type="checkbox" id="cAutoSun" value="1" onchange="CheckAutoSun(this)" />
-									<label for="cAutoSun" id="lAutoSun">
-										Auto Collect<img
-											src="images/interface/icon_sun.png"
-											alt="Sun"
-											style="width: 1.35em; vertical-align: middle; margin-left: 5px"
-										/>
-									</label>
-								</div>
-								<div>
-									<input type="checkbox" id="cSilence" value="1" onchange="PlayAudio('buttonclick')" />
-									<label for="cSilence" id="lSilence">
-										Mute Audio<img
-											src="images/interface/icon_musicnote.png"
-											alt="🔇"
-											style="width: 1.35em; vertical-align: middle; margin-left: 18.5px"
-										/>
-									</label>
-								</div>
-							</div>
-						</div>
-						<div class="BigLevel button" onclick="ShowLevel()">Levels</div>
-
-						<img
-							src="images/interface/icon_sword.png"
-							alt="🎮"
-							style="
-								width: 1.5rem;
-								vertical-align: middle;
-								pointer-events: none;
-								height: 1.5rem;
-								margin-top: -33px;
-								margin-left: calc(50% - 4rem);
-							"
-						/>
-
-						<div class="BigLevel button" onclick="ShowSpeed()">Speed</div>
-
-						<img
-							src="images/interface/icon_speed.png"
-							alt="⌛"
-							style="
-								width: 1.5rem;
-								vertical-align: middle;
-								pointer-events: none;
-								height: 1.5rem;
-								margin-top: -33px;
-								margin-left: calc(50% - 4rem);
-							"
-						/>
-
-						<div class="BigLevel button almanacButton" onclick="ViewHandBook()">Almanac</div>
-
-						<img
-							src="images/interface/icon_plant.png"
-							alt="📖"
-							style="
-								width: 1.5rem;
-								vertical-align: middle;
-								pointer-events: none;
-								height: 1.5rem;
-								margin-top: -33px;
-								margin-left: calc(50% - 4rem);
-							"
-						/>
-
-						<div class="trophy" onclick="SelectModal('achievements')" style="display: none"></div>
-						<div class="BigLevel button" onclick="SelectModal(oS.Lvl)">Restart</div>
-
-						<img
-							src="images/interface/icon_exclamation.png"
-							alt="🔁"
-							style="
-								width: 1.5rem;
-								vertical-align: middle;
-								pointer-events: none;
-								height: 1.5rem;
-								margin-top: -33px;
-								margin-left: calc(50% - 4rem);
-							"
-						/>
-
-						<div
-							class="BigLevel button"
-							onclick="let oldLv = oS.Lvl;SelectModal(0);SetBlock($('dSurface'),$('iSurfaceBackground'));oS.Lvl = oldLv;"
-						>
-							Home
-						</div>
-
-						<img
-							src="images/interface/icon_house.png"
-							alt="🏠"
-							style="
-								width: 1.5rem;
-								vertical-align: middle;
-								pointer-events: none;
-								height: 1.5rem;
-								margin-top: -33px;
-								margin-left: calc(50% - 4rem);
-							"
-						/>
-						<div
-							class="OptionsMenuButton"
-							style="margin-top: 20px"
-							onmousedown="OptionsMenuDown(this,$('sOptionsMenu'))"
-							onmouseup="OptionsMenuUP(this,$('sOptionsMenu'));HiddenOptions();CheckAutoSun($('cAutoSun'));CheckSilence($('cSilence'))"
-						>
-							<span id="sOptionsMenu" class="OptionsMenuButtonSpan">Back To Game</span>
-						</div>
-					</div>
-					<script>
-						var ArLvl = {
-								1: "1",
-								2: "2",
-								3: "3",
-								4: "4",
-								5: "5",
-								6: "6",
-								7: "7",
-								8: "8",
-								9: "9",
-								10: "10",
-							},
-							LvlList = function (BLvl, SLvl1, SLvl2) {
-								var s = "",
-									startlvl = BLvl * 10;
-								do {
-									s += '<span class="lvl" onclick="SelectModal(' + (startlvl + SLvl1) + ')">' + ArLvl[SLvl1] + "</span>";
-								} while (SLvl1++ < SLvl2);
-								document.write(s);
-							};
-					</script>
-				</div>
-				<div id="dAdvSmallContainer" class="Challenge_Background TitleSmallContainer">
-					<div id="dAdvSmallTitle">Level Selection</div>
-					<div class="list">
-						<div class="title day-text">Day<style></style></div>
-						<div class="icon">
-							<img
-								class="img1"
-								style="clip: rect(0, 61px, auto, 0); left: 16px"
-								border="0"
-								src="images/interface/Almanac_Ground.png"
-								width="366"
-								height="61"
-							/>
-							<img class="img2" border="0" src="images/interface/Almanac_ZombieWindow2.png" width="76" height="76" />
-						</div>
-						<div class="lvl2">
-							<script>
-								LvlList(0, 1, 10);
-							</script>
-						</div>
-					</div>
-					<div class="list">
-						<div class="title night-text">Night</div>
-						<div class="icon">
-							<img
-								class="img1"
-								style="clip: rect(0, 183px, auto, 122px); left: -106px"
-								border="0"
-								src="images/interface/Almanac_Ground.png"
-								width="366"
-								height="61"
-							/>
-							<img class="img2" border="0" src="images/interface/Almanac_ZombieWindow2.png" width="76" height="76" />
-						</div>
-						<div class="lvl2">
-							<script>
-								LvlList(1, 1, 10);
-							</script>
-						</div>
-					</div>
-					<div class="list">
-						<div class="title pool-text">Pool</div>
-						<div class="icon">
-							<img
-								class="img1"
-								style="clip: rect(0, 305px, auto, 244px); left: -228px"
-								border="0"
-								src="images/interface/Almanac_Ground.png"
-								width="366"
-								height="61"
-							/>
-							<img class="img2" border="0" src="images/interface/Almanac_ZombieWindow2.png" width="76" height="76" />
-						</div>
-						<div class="lvl2">
-							<script>
-								LvlList(2, 1, 10);
-							</script>
-						</div>
-					</div>
-					<div class="list">
-						<div class="title dragonpalace-text">Dragon Palace</div>
-						<div class="icon">
-							<img
-								class="img1"
-								style="clip: rect(0, 244px, auto, 183px); left: -167px"
-								border="0"
-								src="images/interface/Almanac_Ground.png"
-								width="366"
-								height="61"
-							/>
-							<img class="img2" border="0" src="images/interface/Almanac_ZombieWindow2.png" width="76" height="76" />
-						</div>
-						<div class="lvl2">
-							<script>
-								LvlList(3, 1, 10);
-							</script>
-						</div>
-					</div>
-					<div class="list">
-						<div class="title watertown-text">Water Town</div>
-						<div class="icon">
-							<img
-								class="img1"
-								style="clip: rect(0, 61px, auto, 0); left: 16px"
-								border="0"
-								src="images/interface/jiaxing.png"
-								width="366"
-								height="61"
-							/>
-							<img class="img2" border="0" src="images/interface/Almanac_ZombieWindow2.png" width="76" height="76" />
-						</div>
-						<div class="lvl2">
-							<script>
-								LvlList(4, 1, 10);
-							</script>
-						</div>
-					</div>
-					<div
-						class="button"
-						onmouseover="this.style.backgroundPosition='bottom'"
-						onmouseout="this.style.backgroundPosition='top'"
-						onclick="HiddenLevel()"
-					>
-						Close
-					</div>
-				</div>
-				<div id="dMiniSmallContainer" class="Challenge_Background TitleSmallContainer">
-					<div id="dMiniSmallTitle">China Pavilion - Dave's China Trip</div>
-					<div id="dMini0">
-						<table cellspacing="10" width="100%" style="color: #2a2a5a">
-							<script>
-								(function () {
-									var ar = [
-											"100",
-											"New to China",
-											"wall0.png",
-											"101",
-											"Assassination",
-											"wall1.png",
-											"102",
-											"Night falls",
-											"wall2.png",
-											"103",
-											"Stand out",
-											"wall3.png",
-											"104",
-											"Ancient village",
-											"zhi.png",
-											"105",
-											"Water sports",
-											"zhi1.png",
-											"106",
-											"Grave village",
-											"bai.png",
-											"107",
-											"Ghost night",
-											"bai1.png",
-											"108",
-											"Foot of volcano",
-											"huo.png",
-											"109",
-											"Fueling the fire",
-											"huo1.png",
-											"110",
-											"Devils Palace",
-											"wang.png",
-											"111",
-											"Corpse siege",
-											"wang0.png",
-											"112",
-											"Decisive battle",
-											"wang1.png",
-											"FB",
-											"Battle of the Pass",
-											"FB.png",
-											"WJY",
-											"Meet and Greet",
-											"WJY.png",
-										],
-										v,
-										i = 0,
-										n,
-										l = ar.length,
-										s = "";
-									for (n = 0; n < l; n += 3) {
-										i % 5 == 0 && (s += "<tr>");
-										s +=
-											'<td height="139" valign="top" onclick="SelectModal(\'' +
-											ar[n] +
-											'\')"><div><img src="images/interface/' +
-											ar[n + 2] +
-											'"></div><div class="list">' +
-											ar[n + 1] +
-											"</div></td>";
-										(i + 1) % 5 == 0 ? ((s += "</tr>"), (i = 0)) : ++i;
-									}
-									if (i != 0) {
-										while (--i) s += "<td>　</td>";
-										s += "</tr>";
-									}
-									document.write(s);
-								})();
-							</script>
-						</table>
-						<div
-							class="button"
-							onmouseover="this.style.backgroundPosition='bottom'"
-							onmouseout="this.style.backgroundPosition='top'"
-							onclick="HiddenMiniGame()"
-						>
-							Close
-						</div>
-					</div>
-				</div>
-			</div>
-			<div id="dRiddleSmallContainer" class="Challenge_Background TitleSmallContainer">
-				<div id="dMiniSmallTitle">Mini-Games</div>
-				<div id="dMini0" style="overflow-y: auto; height: 477px; width: 890px">
-					<table cellspacing="10" width="100%" style="color: #2a2a5a">
-						<script>
-							(function () {
-								var ar = [
-										"WallNutBowling1",
-										"<hr style='visibility: hidden; margin-top: -4px;'>Wall-nut Bowling",
-										"WallNutBowling.png",
-										"WallNutBowling",
-										"<hr style='visibility: hidden; margin-top: -4px;'>Wall-nut Bowling 2",
-										"WallNutBowling.png",
-										"Stargazing",
-										"<hr style='visibility: hidden; margin-top: -4px;'>Stargazing",
-										"Stargazing.png",
-										"HypnoHysteria",
-										"Hypno Hysteria",
-										"HypnoHysteria.png",
-										"ZombieGames",
-										"<hr style='visibility: hidden; margin-top: -4px;'>Zombie Games",
-										"woxinfeixiang.png",
-										"yicixingxiaofei",
-										"<hr style='visibility: hidden; margin-top: -4px;'>Blast Blitz",
-										"yicixingxiaofei.gif",
-										"CardRain",
-										"<hr style='visibility: hidden; margin-top: -4px;'>It's Raining Seeds",
-										"RainingSeeds.png",
-										"unsodded",
-										"<hr style='visibility: hidden; margin-top: -4px;'>Unsodded",
-										"Unsodded.png",
-										"BoxedSurprise",
-										"<hr style='visibility: hidden; margin-top: -4.5px;'>Boxed Surprise",
-										"BoxedSurprise.png",
-										"TripleThreatDefense",
-										"<hr style='visibility: hidden; margin-top: -11px;'>Triple Threat<br>Defense",
-										"TripleThreatDefense.png",
-										"SunPower",
-										"<hr style='visibility: hidden; margin-top: -8px;'>Sun Power",
-										"SunPower.png",
-										"AirRaid",
-										"<hr style='visibility: hidden; margin-top: -5px;'>Air Raid",
-										"AirRaid.png",
-										"izombiemenu",
-										"<hr style='visibility: hidden; margin-top: -5px;'>I, Zombie",
-										"izombie.png",
-										"btlzombie",
-										"<hr style='visibility: hidden; margin-top: -12px;'>Big Trouble<br>Little Zombie",
-										"btlzombie.png",
-										"vasebreakermenu",
-										"<hr style='visibility: hidden; margin-top: -5px;'>Vasebreaker",
-										"Vasebreaker.png",
-										"150",
-										"<hr style='visibility: hidden; margin-top: -5px;'>Evergreen Tower",
-										"evergreentower.png",
-									],
-									v,
-									i = 0,
-									n,
-									l = ar.length,
-									s = "";
-								for (n = 0; n < l; n += 3) {
-									i % 5 == 0 && (s += "<tr>");
-									if (ar[n] == "izombiemenu") {
-										s +=
-											'<td height="139" valign="top" onmousemove="ViewGenericMouseover(`<span style=&quot;color:red&quot;><b>NEW!</b></span> Custom I, Zombie Levels!`,event)" onmouseout="SetHidden($(\'dTitle\'))" onclick="SelectModal(\'' +
-											ar[n] +
-											'\')"><div><img src="images/interface/' +
-											ar[n + 2] +
-											'"></div><div class="list">' +
-											ar[n + 1] +
-											"</div></td>";
-										(i + 1) % 5 == 0 ? ((s += "</tr>"), (i = 0)) : ++i;
-									} else {
-										s +=
-											'<td height="139" valign="top" onclick="SelectModal(\'' +
-											ar[n] +
-											'\')"><div><img src="images/interface/' +
-											ar[n + 2] +
-											'"></div><div class="list">' +
-											ar[n + 1] +
-											"</div></td>";
-										(i + 1) % 5 == 0 ? ((s += "</tr>"), (i = 0)) : ++i;
-									}
-								}
-								if (i != 0) {
-									while (--i) s += "<td>　</td>";
-									s += "</tr>";
-								}
-								document.write(s);
-							})();
-						</script>
-					</table>
-					<div
-						class="button"
-						onmouseover="this.style.backgroundPosition='bottom'"
-						onmouseout="this.style.backgroundPosition='top'"
-						onclick="HiddenMiniGame()"
-					>
-						Close
-					</div>
-				</div>
-				<!--Single player interface deprecated, don't modify unless necessary-->
-				<div id="dRiddle0">
-					<div
-						class="button"
-						onmouseover="this.style.backgroundPosition='bottom'"
-						onmouseout="this.style.backgroundPosition='top'"
-						onclick="ReturnRiddleInx()"
-					>
-						Puzzle Mode Index
-					</div>
-				</div>
-				<!--Battle interface deprecated, don't modify unless necessary-->
-				<div id="dRiddle1">
-					<div style="position: relative; width: 94%; font-size: 12px; margin-top: 10px; margin-left: auto; margin-right: auto; color: #000">
-						<button class="jhp" style="height: 23px" onclick="window.frames['fRiddleAlreadyCreateGame'].SearchLvl(0)">all games</button>
-						<button class="jhp" style="height: 23px" onclick="window.frames['fRiddleAlreadyCreateGame'].SearchLvl(1)">I created</button>
-						<button class="jhp" style="height: 23px" onclick="window.frames['fRiddleAlreadyCreateGame'].SearchLvl(2)">i played</button
-						>&nbsp;&nbsp;&nbsp; <input type="text" id="tRiddleID" size="1" /><button
-							class="jhp"
-							style="height: 23px"
-							onclick="window.frames['fRiddleAlreadyCreateGame'].SearchLvl(3,$('tRiddleID').value)"
-						>
-							Serial number query</button
-						>&nbsp;&nbsp;&nbsp; <input type="text" id="tRiddleUserName" size="3" /><button
-							class="jhp"
-							style="height: 23px"
-							onclick="window.frames['fRiddleAlreadyCreateGame'].SearchLvl(4,$('tRiddleUserName').value)"
-						>
-							Created by query</button
-						>&nbsp;&nbsp;&nbsp; <input type="text" id="tRiddleTitle" size="3" /><button
-							class="jhp"
-							style="height: 23px"
-							onclick="window.frames['fRiddleAlreadyCreateGame'].SearchLvl(5,$('tRiddleTitle').value)"
-						>
-							Title query
-						</button>
-						<div style="border: 1px solid #000; height: 440px; width: 100%; background: #fafafa">
-							<iframe
-								name="fRiddleAlreadyCreateGame"
-								id="fRiddleAlreadyCreateGame"
-								marginwidth="1"
-								marginheight="1"
-								height="100%"
-								width="100%"
-								scrolling="no"
-								border="0"
-								frameborder="0"
-							></iframe>
-						</div>
-					</div>
-					<div
-						class="button"
-						onmouseover="this.style.backgroundPosition='bottom'"
-						onmouseout="this.style.backgroundPosition='top'"
-						onclick="ReturnRiddleInx()"
-					>
-						Title Rebel Mode Index
-					</div>
-					<div
-						class="button"
-						style="left: 220px"
-						onmouseover="this.style.backgroundPosition='bottom'"
-						onmouseout="this.style.backgroundPosition='top'"
-						onclick="if($User.Visitor.UserName!='游客'||confirm('Visitors can only experience the creation function and cannot be archived\nPlease use registered users to save your creativity!'))SelectModal('ImZombieCreateGame')"
-					>
-						Create a new level
-					</div>
-				</div>
-				<div
-					id="dRiddleClose"
-					onmouseover="this.style.backgroundPosition='bottom'"
-					onmouseout="this.style.backgroundPosition='top'"
-					onclick="HiddenRiddleGame()"
-				>
-					Close&nbsp;
-				</div>
-			</div>
-		</div>
-		<div class="WindowFrame" id="dAll">
-			<div id="tGround"></div>
-			<div id="dCardList"></div>
-			<div id="dZombie"></div>
-			<div
-				id="bShowHandBook"
-				onmouseover="this.style.backgroundPosition='bottom'"
-				onmouseout="this.style.backgroundPosition='top'"
-				onclick="ViewHandBook()"
-			>
-				Almanac&nbsp;
-			</div>
-			<div id="dSelectCard">
-				<div class="title"></div>
-				<div id="dPCard"></div>
-				<div class="bTitle">
-					<input class="button" onclick="ResetSelectCard()" type="button" value="Clear" name="btnReset" id="btnReset" style="color: #fc6" />
-					<input
-						class="button"
-						onclick="oS.ScrollBack(LetsGO)"
-						type="button"
-						value="Start"
-						disabled="disabled"
-						name="btnOK"
-						id="btnOK"
-						style="color: #888"
-					/>
-				</div>
-			</div>
-			<div id="dTop">
-				<div id="dSunNum">
-					<span id="sSunNum"></span>
-				</div>
-				<div id="tdShovel">
-					<img id="imgShovel" src="images/interface/Shovel/0.gif" onmousedown="ChoseShovel(event)" />
-				</div>
-			</div>
-			<div id="dPZ"></div>
-		</div>
-		<div id="dMenu">
-			<div id="dMenu0" class="Menu" onclick="ClickMenu();ShowSpeed()">Speed</div>
-			<div id="dMenu1" class="Menu" onclick="ClickMenu()">Menu</div>
-		</div>
-		<div id="dHandBook" class="WindowFrame">
-			<div class="title">Suburban Almanac - Index</div>
-			<div class="content">
-				<div>
-					<img border="0" src="images/Plants/SunFlower/SunFlower1.gif" width="73" height="74" /><br />
-					<input class="button" type="button" value="View Plants" name="btnViewPlant" id="btnViewPlant" onclick="InitHandBookPCard()" />
-				</div>
-				<div style="left: 50%; padding-top: 95px">
-					<img border="0" src="images/Zombies/Zombie/1.gif" width="149" height="130" /><br />
-					<input class="button" type="button" value="View Zombies" name="btnViewZombie" id="btnViewZombie" onclick="InitHandBookZCard()" />
-				</div>
-			</div>
-			<div class="close" onmouseover="this.style.backgroundPosition='bottom'" onmouseout="this.style.backgroundPosition='top'" onclick="CloseHandBook()">
-				Close&nbsp;
-			</div>
-		</div>
-		<div id="dHandBookPZ" class="Almanac_PlantBack WindowFrame">
-			<div id="dHandBookP">
-				<div class="title">Suburban Almanac - Plants</div>
-				<div id="dHandBookPCard"></div>
-				<div id="pPlantBack"></div>
-				<div class="list">
-					<div id="pHandBookPlant"></div>
-					<div id="dHandBookPlantName"></div>
-					<div id="dProducePlant"></div>
-					<div class="cost_cool">
-						<span class="cost">Cost: </span><span id="spSunNum"></span><span class="cool">Recharge: </span><span id="spCoolTime"></span>
-					</div>
-				</div>
-			</div>
-			<div id="dHandBookZ">
-				<div class="title">Suburban Almanac - Zombies</div>
-				<div id="dHandBookZCard"></div>
-				<div id="pZombieBack"></div>
-				<div class="list">
-					<div id="pHandBookZombie"></div>
-					<div id="dHandBookZombieName"></div>
-					<div id="dProduceZombie"></div>
-				</div>
-			</div>
-			<div class="dButton">
-				<div
-					class="button1"
-					onmouseover="this.style.backgroundPosition='bottom'"
-					onmouseout="this.style.backgroundPosition='top'"
-					onclick="ReturnHandBookInx()"
-				>
-					Almanac Index
-				</div>
-				<div
-					class="button2"
-					onmouseover="this.style.backgroundPosition='bottom'"
-					onmouseout="this.style.backgroundPosition='top'"
-					onclick="CloseHandBook()"
-				>
-					Close&nbsp;
-				</div>
-			</div>
-		</div>
-		<div id="dNewPlant">
-			<div id="dNewPlantTitle">You got a new plant!</div>
-			<div class="card">
-				<img id="iNewPlantCard" border="0" />
-			</div>
-			<div class="card">
-				<img id="iNewTrophy" border="0" />
-			</div>
-			<br />
-			<div id="dNewPlantName"></div>
-			<br /><br /><br />
-			<div id="dNewPlantTooltip"></div>
-			<br /><br /><br /><br /><br /><br />
-			<div
-				id="bMainMenu"
-				onmouseover="this.style.backgroundPosition='bottom'"
-				onmouseout="this.style.backgroundPosition='top'"
-				onclick="oldLv=oS.Lvl;SelectModal(0);SetBlock($('dSurface'),$('iSurfaceBackground'));oS.Lvl=oldLv;document.querySelector('#btnNextLevel').click();"
-				style="visibility: none; background-position: center top"
-			>
-				Main Menu&nbsp;
-			</div>
-			<input type="button" value="NEXT LEVEL!" name="btnNextLevel" id="btnNextLevel" />
-		</div>
-		<div id="dProcess">
-			<input class="button" type="button" value="Close" onclick="SetHidden($('dProcess'))" style="margin-top: 330px" />
-			<script>
-				document.write(
-					'<a style="margin-left:50px;cursor:url(images/interface/Pointer.cur),pointer;color:#FF0;font-size:15px;text-decoration:none;font-weight:bold;display:none" target="_blank" ></a>'
-				);
-			</script>
-		</div>
-		<div id="dSpeedContainer">
-			<div class="title">At the request of players, the game speed adjustment function is especially introduced</div>
-			<div class="dSpeed" title="Click on a speed to select soft acceleration">
-				<div class="dS1">Click on the corresponding speed</div>
-				<div class="dS2">
-					<div onclick="CSpeed(1,20,.5)">1/2<br /><br />┕━</div>
-					<div onclick="CSpeed(1,10,1)">1<br /><br />━┻━</div>
-					<div onclick="CSpeed(2,10,2)">2<br /><br />━┻━</div>
-					<div onclick="CSpeed(5,10,5)">5<br /><br />━┻━</div>
-					<div onclick="CSpeed(5,5,10)">10<br /><br />━┛</div>
-				</div>
-			</div>
-			<div class="nowspeed">Current game speed:<span id="dDisplaySpeed">1</span></div>
-			<div class="content">
-				<span>&nbsp;&nbsp;&nbsp; Speed Continue</span>: Ideally, the speed adjustment provided by the game is
-				<font color="#FFFF00">1/2 speed - 10 times speed</font>. But the speed Continue effect is related to your browser and computer. For example, IE6
-				browser can't be expected to be 10 times faster on a good computer.<br />&nbsp;&nbsp;&nbsp; After the speed adjustment, the visual visual of the
-				screen may feel a bit sluggish, and at high speeds, some browsers may not be able to accelerate or can only accelerate for a short time and then
-				slow down.<br />&nbsp;&nbsp;&nbsp;
-				<span style="color: #ff0"
-					>Finally, it is strongly recommended to use: Chrome, FireFox, Brave, so that you can experience the feeling of a machine gun with a
-					peashooter!<br />&nbsp;&nbsp;&nbsp;
-				</span>
-			</div>
-			<br />
-			<div>
-				<input type="button" value="Resume" onclick="HiddenSpeed()" />&nbsp;&nbsp;
-				<input type="button" value="Reset Speed" onclick="CSpeed(1,10,1)" />
-			</div>
-		</div>
-		<script>
-			$User.Client.PC && $User.HTTP
-				? ((oS.AutoSun = Math.floor(getCookie("JSPVZAutoSun"))) && ($("cAutoSun").checked = true),
-					(oS.Silence = Math.floor(getCookie("JSPVZSilence"))) && ($("cSilence").checked = true))
-				: ((oS.AutoSun = 1), ($("cAutoSun").checked = true), (oS.Silence = 0), ($("cSilence").checked = false));
-			InitGame();
-		</script>
-		<script src="js/CPlants.js"></script>
-		<script src="js/CZombie.js"></script>
-		<script src="js/CFP_Beta.js"></script>
-		<!-- izombie lvl saving stuffs -->
-		<!--本网页来自江南游戏 || pvzweb.usa3v.net-->
-		<button id="changelog" style="z-index: 99999; position: relative; margin-top: 544px; left: 50%; margin-left: -400px; display: none">Changelog</button>
-		<svg style="width: 0; height: 0">
-			<defs>
-				<filter id="cardboard" x="-50%" y="-50%" width="200%" height="200%">
-					<feColorMatrix
-						type="matrix"
-						values="
-							1.25  0 0 0 0
-							0     0.788 0 0 0
-							0     0 0.627 0 0
-							0     0 0     1 0
-						"
-						result="coloredImage"
-					></feColorMatrix>
-
-					<feComponentTransfer in="coloredImage" result="brightenedImage">
-						<feFuncR type="linear" slope="0.9"></feFuncR>
-						<feFuncG type="linear" slope="0.9"></feFuncG>
-						<feFuncB type="linear" slope="0.9"></feFuncB>
-						<!-- Keep alpha unchanged -->
-						<feFuncA type="identity"></feFuncA>
-					</feComponentTransfer>
-
-					<feColorMatrix
-						type="matrix"
-						values="
-           					0.9801 0.0199 0.0000 0 0
-           					0.0000 0.9801 0.0199 0 0
-           					0.0000 0.0000 0.9801 0 0
-           					0      0      0      1 0
-        				"
-						in="brightenedImage"
-						result="sepiaEffect"
-					></feColorMatrix>
-
-					<feColorMatrix
-						type="matrix"
-						values="
-               				0.393  0.769  0.189  0  0
-               				0.349  0.686  0.168  0  0
-               				0.272  0.534  0.131  0  0
-               				0      0      0      1  0
-           				"
-						in="SourceGraphic"
-						result="fullSepia"
-					/>
-					<feBlend in="brightenedImage" in2="fullSepia" mode="normal" result="sepiaBlended" style="mix-blend-mode: lighten"></feBlend>
-
-					<feColorMatrix
-						type="matrix"
-						values="
-            				1.25  0 0 0 0
-            				0     0.788 0 0 0
-            				0     0 0.627 0 0
-            				0     0 0     1 0
-        				"
-						in="SourceGraphic"
-						result="coloredImage"
-					></feColorMatrix>
-					<feComponentTransfer in="coloredImage" result="processedImage">
-						<feFuncR type="linear" slope="0.9"></feFuncR>
-						<feFuncG type="linear" slope="0.9"></feFuncG>
-						<feFuncB type="linear" slope="0.9"></feFuncB>
-						<feFuncA type="identity"></feFuncA>
-					</feComponentTransfer>
-
-					<feGaussianBlur in="SourceAlpha" stdDeviation="0" result="blur1" />
-					<feOffset dx="-2" dy="-2" in="blur1" result="offsetBlur1" />
-					<feFlood flood-color="rgb(171, 135, 107)" result="shadowColor1" />
-					<feComposite in="shadowColor1" in2="offsetBlur1" operator="in" result="shadow1" />
-
-					<feGaussianBlur in="SourceAlpha" stdDeviation="0" result="blur2" />
-					<feOffset dx="4" dy="4" in="blur3" result="offsetBlur3" />
-					<feFlood flood-color="rgb(122, 86, 58)" result="shadowColor3" />
-					<feComposite in="shadowColor3" in2="offsetBlur3" operator="in" result="shadow3" />
-
-					<feGaussianBlur in="SourceAlpha" stdDeviation="0" result="blur3" />
-					<feOffset dx="2" dy="2" in="blur2" result="offsetBlur2" />
-					<feFlood flood-color="rgb(171, 135, 107)" result="shadowColor2" />
-					<feComposite in="shadowColor2" in2="offsetBlur2" operator="in" result="shadow2" />
-
-					<feMerge>
-						<feMergeNode in="shadow1" />
-						<feMergeNode in="shadow3" />
-						<feMergeNode in="shadow2" />
-						<feMergeNode in="processedImage" />
-					</feMerge>
-				</filter>
-			</defs>
-		</svg>
-		<!-- 100% privacy-first analytics -->
-		<script data-collect-dnt="true" async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
-		<noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=true" alt="" referrerpolicy="no-referrer-when-downgrade" /></noscript>
-		<!-- cloudflare turnstile -->
-		<script async defer src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
-	</body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plants vs. Zombies MODDED</title>
+    <link rel="icon" href="images/interface/Sunflower_trophy32.png" type="image/png">
+    <meta name="theme-color" content="#2d5a27">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --sidebar-width: 280px;
+            --primary: #4caf50;
+            --dark: #1a3a15;
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --text: #f0f6fc;
+            --muted: #8b949e;
+            --gold: #ffd700;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            color: var(--text);
+            transition: margin-left 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .sidebar.hidden {
+            margin-left: calc(var(--sidebar-width) * -1);
+        }
+        
+        .sidebar-header {
+            padding: 20px 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(76,175,80,0.15) 0%, transparent 100%);
+        }
+        
+        .sidebar-header h1 {
+            font-size: 16px;
+            color: var(--gold);
+            margin-bottom: 3px;
+        }
+        
+        .sidebar-header small {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Profile */
+        .profile {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .profile-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 12px;
+        }
+        
+        .profile-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .avatar {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .profile-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .profile-status {
+            font-size: 10px;
+            color: var(--muted);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        
+        .stat {
+            background: rgba(0,0,0,0.4);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        .stat-label {
+            font-size: 8px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+        
+        /* Buttons */
+        .actions {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            filter: brightness(1.1);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* Info */
+        .info {
+            padding: 15px;
+            flex: 1;
+        }
+        
+        .info h4 {
+            font-size: 9px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .info ul {
+            list-style: none;
+            font-size: 11px;
+            color: var(--muted);
+        }
+        
+        .info li {
+            padding: 4px 0;
+        }
+        
+        /* Footer */
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 10px;
+            color: var(--muted);
+        }
+        
+        .sidebar-footer a {
+            color: var(--muted);
+            text-decoration: none;
+            margin: 0 6px;
+        }
+        
+        .sidebar-footer a:hover {
+            color: var(--gold);
+        }
+        
+        /* Game Area */
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        
+        .game-header {
+            height: 40px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 10px;
+        }
+        
+        .toggle-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.05);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .toggle-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .game-title {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .spacer { flex: 1; }
+        
+        /* Game Frame */
+        .game-frame {
+            flex: 1;
+            border: none;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>🌻 PVZ MODDED 🧟</h1>
+            <small>Web Edition v5.0</small>
+        </div>
+        
+        <div class="profile">
+            <div class="profile-card">
+                <div class="profile-row">
+                    <div class="avatar" id="avatar">🌻</div>
+                    <div>
+                        <div class="profile-name" id="userName">Guest</div>
+                        <div class="profile-status" id="userStatus">No profile</div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="statLevel">-</div>
+                        <div class="stat-label">Level</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statTime">-</div>
+                        <div class="stat-label">Time</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statCoins">-</div>
+                        <div class="stat-label">Coins</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statWins">-</div>
+                        <div class="stat-label">Wins</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-primary" onclick="openSaveMenu()">💾 Manage Profiles</button>
+            <button class="btn btn-secondary" onclick="goFullscreen()">⛶ Fullscreen</button>
+            <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh Stats</button>
+        </div>
+        
+        <div class="info">
+            <h4>🎮 Game Modes</h4>
+            <ul>
+                <li>🌿 50 Adventure Levels</li>
+                <li>🎯 16+ Mini-Games</li>
+                <li>🧟 I, Zombie Mode</li>
+                <li>🏺 Vasebreaker</li>
+                <li>✏️ Custom Levels</li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-footer">
+            <a href="https://github.com/terminaldz/pvz" target="_blank">GitHub</a>
+            <a href="#" onclick="showHelp()">Help</a>
+            <div style="margin-top:5px">CC BY-NC-ND 4.0</div>
+        </div>
+    </aside>
+    
+    <!-- Game Area -->
+    <main class="game-area">
+        <div class="game-header">
+            <button class="toggle-btn" onclick="toggleSidebar()" title="Toggle Panel">☰</button>
+            <span class="game-title">Plants vs. Zombies</span>
+            <div class="spacer"></div>
+            <button class="toggle-btn" onclick="goFullscreen()" title="Fullscreen">⛶</button>
+        </div>
+        <iframe id="gameFrame" class="game-frame" src="game.html"></iframe>
+    </main>
+    
+    <script>
+        // Toggle Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        }
+        
+        // Fullscreen
+        function goFullscreen() {
+            const frame = document.getElementById('gameFrame');
+            if (frame.requestFullscreen) frame.requestFullscreen();
+            else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+        }
+        
+        // Open Save Menu via postMessage
+        function openSaveMenu() {
+            const frame = document.getElementById('gameFrame');
+            frame.contentWindow.postMessage({ action: 'openSaveMenu' }, '*');
+        }
+        
+        // Show Help
+        function showHelp() {
+            alert('🎮 How to Play:\n\n1. Create a profile to save progress\n2. Click Adventure to start\n3. Select plants and defend your lawn!\n4. Collect sun and stop the zombies!');
+        }
+        
+        // Update Stats from localStorage (shared between iframe and parent)
+        function refreshStats() {
+            try {
+                const saves = JSON.parse(localStorage.getItem('PVZ_GAME_SAVES') || '{}');
+                const userId = localStorage.getItem('PVZ_CURRENT_USER');
+                
+                if (userId && saves[userId]) {
+                    const u = saves[userId];
+                    document.getElementById('userName').textContent = u.profile.username;
+                    document.getElementById('userStatus').textContent = 'Active';
+                    document.getElementById('statLevel').textContent = u.progress.highestLevel || 1;
+                    document.getElementById('statTime').textContent = Math.floor((u.profile.playTime || 0) / 60) + 'm';
+                    document.getElementById('statCoins').textContent = u.currency.coins || 0;
+                    document.getElementById('statWins').textContent = u.statistics.gamesWon || 0;
+                } else {
+                    document.getElementById('userName').textContent = 'Guest';
+                    document.getElementById('userStatus').textContent = 'No profile';
+                    document.getElementById('statLevel').textContent = '-';
+                    document.getElementById('statTime').textContent = '-';
+                    document.getElementById('statCoins').textContent = '-';
+                    document.getElementById('statWins').textContent = '-';
+                }
+            } catch(e) {}
+        }
+        
+        // Listen for messages from game
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.action === 'profileUpdated') {
+                refreshStats();
+            }
+        });
+        
+        // Auto refresh
+        setInterval(refreshStats, 3000);
+        document.addEventListener('DOMContentLoaded', refreshStats);
+        window.addEventListener('storage', refreshStats);
+    </script>
+</body>
 </html>

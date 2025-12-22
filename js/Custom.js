@@ -23,7 +23,8 @@ waitForElm("#commit").then((elm) => {
 	// set the innertext to that of the contents of v.txt
 	fetch("images/Zombies/CX/v.html")
 		.then((response) => response.text())
-		.then((text) => (elm.innerText = text));
+		.then((text) => (elm.innerText = text))
+		.catch(() => {}); // Silently ignore fetch errors (file may not exist)
 });
 
 const saveWhitelist = [
@@ -200,7 +201,7 @@ function startInterval2() {
 	}, 100);
 }
 
-checkInterval2;
+// Note: startInterval2() is called from level/0.js
 
 let playingSounds = [];
 function PlaySound2(path, name, loop = false) {
