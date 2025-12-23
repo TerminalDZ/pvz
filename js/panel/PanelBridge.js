@@ -30,6 +30,21 @@
         if (e.data.action === 'shovelPlant') {
             shovelPlantAtCell(e.data.row, e.data.col);
         }
+
+        // Handle sun tracker request from parent
+        if (e.data.action === 'requestSunTracker') {
+            sendSunTrackerData();
+        }
+
+        // Handle collect single sun request
+        if (e.data.action === 'collectSun') {
+            collectSunById(e.data.sunId);
+        }
+
+        // Handle collect all suns request
+        if (e.data.action === 'collectAllSuns') {
+            collectAllSuns();
+        }
     });
 
     /**
@@ -233,6 +248,116 @@
             return oS.LevelName;
         }
         return '';
+    }
+
+    // ============================================
+    // SUN TRACKER FUNCTIONS
+    // ============================================
+
+    /**
+     * Send sun tracker data to parent
+     */
+    function sendSunTrackerData() {
+        if (!window.parent) return;
+
+        const suns = getSunPositions();
+        
+        window.parent.postMessage({
+            action: 'sunTrackerUpdate',
+            suns: suns
+        }, '*');
+    }
+
+    /**
+     * Get all uncollected sun positions from DOM
+     */
+    function getSunPositions() {
+        const suns = [];
+        
+        // Find all sun elements by ID pattern: Sun0.xxxxx
+        const sunElements = document.querySelectorAll('img[id^="Sun"]');
+        
+        sunElements.forEach(el => {
+            // Skip if hidden
+            if (el.style.display === 'none' || el.style.visibility === 'hidden') return;
+            
+            const left = parseInt(el.style.left) || 0;
+            const top = parseInt(el.style.top) || 0;
+            const width = parseInt(el.style.width) || 100;
+            
+            // Determine value based on size
+            let value = 25;
+            let size = 'normal';
+            if (width < 90) {
+                value = 15; // Small sun
+                size = 'small';
+            } else if (width > 100) {
+                value = 50; // Large sun
+                size = 'large';
+            }
+            
+            suns.push({
+                id: el.id,
+                x: left,
+                y: top,
+                value: value,
+                size: size
+            });
+        });
+        
+        return suns;
+    }
+
+    /**
+     * Collect a specific sun by ID
+     */
+    function collectSunById(sunId) {
+        const sunEl = document.getElementById(sunId);
+        if (!sunEl) {
+            console.log('[PanelBridge] Sun not found:', sunId);
+            return;
+        }
+        
+        // Simulate clicking the sun
+        try {
+            sunEl.click();
+            console.log('[PanelBridge] Sun collected:', sunId);
+            
+            // Send updated data
+            setTimeout(() => {
+                sendSunTrackerData();
+                sendGameStats();
+            }, 100);
+        } catch (err) {
+            console.error('[PanelBridge] Error collecting sun:', err);
+        }
+    }
+
+    /**
+     * Collect all suns
+     */
+    function collectAllSuns() {
+        const sunElements = document.querySelectorAll('img[id^="Sun"]');
+        let collected = 0;
+        
+        sunElements.forEach(el => {
+            if (el.style.display === 'none' || el.style.visibility === 'hidden') return;
+            
+            try {
+                el.click();
+                collected++;
+            } catch (err) {
+                // Ignore errors
+            }
+        });
+        
+        console.log('[PanelBridge] Collected all suns:', collected);
+        
+        // Send updated data
+        setTimeout(() => {
+            sendSunTrackerData();
+            sendGameStats();
+        }, 150);
     }
 
     // ============================================

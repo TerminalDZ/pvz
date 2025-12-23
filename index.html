@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#2d5a27">
     <link rel="stylesheet" href="js/panel/GameStatsModal.css">
     <link rel="stylesheet" href="js/panel/GameMapModal.css">
+    <link rel="stylesheet" href="js/panel/SunTrackerModal.css">
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -446,10 +447,26 @@
     <!-- Top Bar Overlay -->
     <div id="topBarOverlay">
         <button class="btn btn-game-stats" id="gamePanelBtn" style="display:none;" onclick="GameStatsModal.open(); GameMapModal.open();">📊 Game Panel</button>
+        <button class="btn btn-sun-tracker" id="sunTrackerBtn" style="display:none; background: linear-gradient(135deg, rgba(255,193,7,0.2), rgba(255,152,0,0.15)); border-color: rgba(255,193,7,0.4); color: #ffc107; margin-left: 8px;" onclick="SunTrackerModal.toggle()">☀️ Sun Tracker</button>
     </div>
 
     <!-- Scripts -->
     <script src="js/panel/GameStatsModal.js"></script>
     <script src="js/panel/GameMapModal.js"></script>
+    <script src="js/panel/SunTrackerModal.js"></script>
+
+    <script>
+        // Show/hide Sun Tracker button when in level with sun
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.action === 'levelStart') {
+                const sunBtn = document.getElementById('sunTrackerBtn');
+                if (sunBtn) sunBtn.style.display = e.data.hasSun ? 'flex' : 'none';
+            }
+            if (e.data && e.data.action === 'toggleSaveButton') {
+                const sunBtn = document.getElementById('sunTrackerBtn');
+                if (sunBtn && e.data.visible) sunBtn.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
