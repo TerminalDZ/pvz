@@ -20,6 +20,16 @@
         if (e.data.action === 'requestGameMap') {
             sendGameMap();
         }
+
+        // Handle plant placement request from parent
+        if (e.data.action === 'placePlant') {
+            placePlantAtCell(e.data.cardIndex, e.data.row, e.data.col);
+        }
+
+        // Handle shovel (plant removal) request from parent
+        if (e.data.action === 'shovelPlant') {
+            shovelPlantAtCell(e.data.row, e.data.col);
+        }
     });
 
     /**
@@ -34,10 +44,35 @@
             uncollectedSun: getUncollectedSunCount(),
             cards: getSelectedCards(),
             isPlaying: isGamePlaying(),
-            levelName: getLevelName()
+            levelName: getLevelName(),
+            isSunFree: isSunFreeLevel()
         };
 
         window.parent.postMessage(stats, '*');
+    }
+
+    /**
+     * Check if current level doesn't use sun (Wall-nut Bowling, I Zombie, etc.)
+     */
+    function isSunFreeLevel() {
+        if (typeof oS === 'undefined') return false;
+        
+        // ProduceSun = false means no sun production (I,Zombie, Vasebreaker, etc.)
+        if (oS.ProduceSun === false) return true;
+        
+        // StaticCard = 0 means dynamic cards (Wall-nut Bowling style)
+        if (oS.StaticCard === 0) return true;
+        
+        // CardKind = 1 means zombie cards (I, Zombie mode)
+        if (oS.CardKind === 1) return true;
+        
+        // Check if sun counter is hidden (via DOM)
+        const sunNumEl = document.getElementById('dSunNum');
+        if (sunNumEl && (sunNumEl.style.display === 'none' || sunNumEl.style.visibility === 'hidden')) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -201,6 +236,232 @@
     }
 
     // ============================================
+    // PLANT PLACEMENT FUNCTIONS
+    // ============================================
+
+    /**
+     * Place a plant at the specified cell from modal UI
+     * @param {number} cardIndex - Index in ArCard array
+     * @param {number} row - Grid row (1-5 typically)
+     * @param {number} col - Grid column (1-9)
+     */
+    function placePlantAtCell(cardIndex, row, col) {
+        console.log('[PanelBridge] placePlantAtCell called:', cardIndex, row, col);
+        
+        // Validate game state
+        if (typeof ArCard === 'undefined' || typeof oS === 'undefined' || typeof oGd === 'undefined') {
+            console.error('[PanelBridge] Game objects not available');
+            sendPlacementResult(false, 'Game not ready');
+            return;
+        }
+        
+        // Get card info
+        const card = ArCard[cardIndex];
+        if (!card) {
+            console.error('[PanelBridge] Invalid card index:', cardIndex);
+            sendPlacementResult(false, 'Invalid card');
+            return;
+        }
+        
+        const plantConstructor = card.PName;
+        const proto = plantConstructor.prototype;
+        
+        // Check affordability
+        const sunCost = proto.SunNum || 0;
+        const currentSun = getSunCount();
+        const isSunFree = isSunFreeLevel();
+        
+        if (!isSunFree && currentSun < sunCost) {
+            console.log('[PanelBridge] Not enough sun');
+            sendPlacementResult(false, 'Not enough sun');
+            return;
+        }
+        
+        // Check cooldown (CDReady property on card)
+        if (card.CDReady === 0) {
+            console.log('[PanelBridge] Card on cooldown');
+            sendPlacementResult(false, 'Card on cooldown');
+            return;
+        }
+        
+        // Get pixel coordinates
+        const pixelX = getPixelX(col);
+        const pixelY = getPixelY(row);
+        
+        if (!pixelX || !pixelY) {
+            console.error('[PanelBridge] Invalid coordinates');
+            sendPlacementResult(false, 'Invalid position');
+            return;
+        }
+        
+        // Get grid slot array for CanGrow check
+        const gridSlots = [];
+        for (let i = 0; i < 4; i++) {
+            const slot = oGd.$[row + '_' + col + '_' + i];
+            gridSlots.push(slot || null);
+        }
+        
+        // Check if plant can grow here
+        if (typeof proto.CanGrow === 'function' && !proto.CanGrow(gridSlots, row, col)) {
+            console.log('[PanelBridge] Cannot grow here');
+            sendPlacementResult(false, 'Cannot place here');
+            return;
+        }
+        
+        // Place the plant!
+        try {
+            // Get lane type for audio
+            const laneType = oGd.$LF ? oGd.$LF[row] : 1;
+            
+            // Play placement sound
+            if (typeof PlayAudio === 'function') {
+                PlayAudio(laneType !== 2 ? 'plant' + Math.floor(1 + Math.random() * 2) : 'plant_water');
+            }
+            
+            // Create the plant
+            const plant = new plantConstructor();
+            plant.Birth(pixelX, pixelY, row, col, gridSlots[0] || '');
+            
+            // Deduct sun (if not sun-free level)
+            if (!isSunFree) {
+                oS.SunNum -= sunCost;
+                // Update sun display
+                const sunEl = document.getElementById('sSunNum');
+                if (sunEl) {
+                    sunEl.textContent = oS.SunNum;
+                    sunEl.innerText = oS.SunNum;
+                }
+            }
+            
+            // Start cooldown
+            if (proto.coolTime && typeof DoCoolTimer === 'function') {
+                card.CDReady = 0;
+                DoCoolTimer(cardIndex, proto.coolTime);
+            }
+            
+            // Show grow soil animation if available
+            const growSoil = document.getElementById('imgGrowSoil');
+            if (growSoil && typeof SetStyle === 'function' && typeof SetNone === 'function') {
+                SetStyle(growSoil, {
+                    left: (pixelX - 30) + 'px',
+                    top: (pixelY - 40) + 'px',
+                    zIndex: 3 * row,
+                    visibility: 'visible'
+                });
+                setTimeout(() => SetNone(growSoil), 200);
+            }
+            
+            console.log('[PanelBridge] Plant placed successfully!');
+            sendPlacementResult(true, 'Plant placed');
+            
+            // Send updated stats after placement
+            setTimeout(() => {
+                sendGameStats();
+                sendGameMap();
+            }, 100);
+            
+        } catch (err) {
+            console.error('[PanelBridge] Error placing plant:', err);
+            sendPlacementResult(false, 'Placement error: ' + err.message);
+        }
+    }
+
+    /**
+     * Get pixel X coordinate for column
+     */
+    function getPixelX(col) {
+        const mapping = { 1: 187, 2: 267, 3: 347, 4: 427, 5: 507, 6: 587, 7: 667, 8: 747, 9: 827 };
+        return mapping[col] || null;
+    }
+
+    /**
+     * Get pixel Y coordinate for row
+     */
+    function getPixelY(row) {
+        const mapping = { 0: 75, 1: 175, 2: 270, 3: 380, 4: 470, 5: 575 };
+        return mapping[row] || null;
+    }
+
+    /**
+     * Send placement result back to parent
+     */
+    function sendPlacementResult(success, message) {
+        if (window.parent) {
+            window.parent.postMessage({
+                action: 'plantPlacementResult',
+                success: success,
+                message: message
+            }, '*');
+        }
+    }
+
+    /**
+     * Remove a plant at the specified cell (shovel feature)
+     * @param {number} row - Grid row
+     * @param {number} col - Grid column
+     */
+    function shovelPlantAtCell(row, col) {
+        console.log('[PanelBridge] shovelPlantAtCell called:', row, col);
+        
+        // Validate game state
+        if (typeof oGd === 'undefined' || typeof $P === 'undefined') {
+            console.error('[PanelBridge] Game objects not available for shovel');
+            return;
+        }
+        
+        // Find plant at this position
+        let plantToRemove = null;
+        
+        // Search in $P registry for plant at this row/col
+        for (let key in $P) {
+            const plant = $P[key];
+            if (!plant || plant.R === undefined || plant.C === undefined) continue;
+            
+            // Skip lawnmowers and cleaners
+            const ename = plant.EName || '';
+            if (ename.includes('Cleaner') || ename.includes('LawnCleaner') || 
+                ename.includes('PoolCleaner') || ename.includes('Brains')) {
+                continue;
+            }
+            
+            if (plant.R === row && plant.C === col) {
+                plantToRemove = plant;
+                break;
+            }
+        }
+        
+        if (!plantToRemove) {
+            console.log('[PanelBridge] No plant found at position:', row, col);
+            return;
+        }
+        
+        try {
+            // Play shovel sound
+            if (typeof PlayAudio === 'function') {
+                PlayAudio('plant2');
+            }
+            
+            // Remove the plant by calling Die()
+            if (typeof plantToRemove.Die === 'function') {
+                plantToRemove.Die();
+                console.log('[PanelBridge] Plant removed:', plantToRemove.EName || 'Unknown');
+            } else {
+                console.error('[PanelBridge] Plant does not have Die() method');
+                return;
+            }
+            
+            // Send updated map data after removal
+            setTimeout(() => {
+                sendGameStats();
+                sendGameMap();
+            }, 100);
+            
+        } catch (err) {
+            console.error('[PanelBridge] Error shoveling plant:', err);
+        }
+    }
+
+    // ============================================
     // MAP DATA FUNCTIONS
     // ============================================
 
@@ -215,22 +476,6 @@
         const plants = getPlantPositions();
         const zombies = getZombiePositions();
         const lawnmowers = getLawnmowerPositions();
-
-        // === DEBUG LOGS ===
-        console.group('[PanelBridge] Map Data Update');
-        console.log('📊 oS.R (rows):', rows);
-        console.log('📊 Lane Flags (oGd.$LF):', JSON.stringify(laneFlags));
-        console.log('🌱 Plants found:', plants.length);
-        if (plants.length > 0) {
-            console.table(plants.map(p => ({ name: p.name, row: p.row, col: p.col, image: p.image ? '✅' : '❌' })));
-        }
-        console.log('🧟 Zombies found:', zombies.length);
-        if (zombies.length > 0) {
-            console.table(zombies.map(z => ({ name: z.name, row: z.row, col: z.col, image: z.image ? '✅' : '❌' })));
-        }
-        console.log('🚜 Lawnmowers:', lawnmowers.map(l => `R${l.row}`).join(', ') || 'None');
-        console.groupEnd();
-        // === END DEBUG ===
 
         const mapData = {
             action: 'gameMapUpdate',
@@ -255,40 +500,56 @@
 
         // Method 1: Read from $P object (game's plant registry)
         if (typeof $P !== 'undefined') {
-            console.log('[PanelBridge] 🌱 $P keys:', Object.keys($P).length);
             
             for (let key in $P) {
                 const plant = $P[key];
                 if (!plant || plant.R === undefined || plant.C === undefined) continue;
                 
-                // Skip lawnmowers and cleaners
+                // Skip non-plant objects: lawnmowers, cleaners, and brains (I,Zombie target)
                 const ename = plant.EName || '';
-                if (ename.includes('Cleaner') || ename.includes('LawnCleaner') || ename.includes('PoolCleaner')) {
-                    console.log(`[Plant] Skipping cleaner: ${ename}`);
+                if (ename.includes('Cleaner') || ename.includes('LawnCleaner') || 
+                    ename.includes('PoolCleaner') || ename.includes('Brains')) {
                     continue;
                 }
 
                 // Try multiple methods to get image
                 let imageSrc = '';
+                const plantName = ename.startsWith('o') ? ename.substring(1) : ename;
                 
-                // Method 1a: Direct EleBody.src
+                // Method 1: Direct EleBody.src (current displayed image)
                 if (plant.EleBody && plant.EleBody.src) {
                     imageSrc = plant.EleBody.src;
                 }
-                // Method 1b: Query from Ele
-                if (!imageSrc && plant.Ele && plant.Ele.querySelector) {
-                    const img = plant.Ele.querySelector('img:not([src*="shadow"])');
-                    if (img && img.src) imageSrc = img.src;
+                
+                // Method 2: Query from Ele DOM element
+                if (!imageSrc && plant.Ele) {
+                    const imgs = plant.Ele.querySelectorAll('img:not([src*="shadow"])');
+                    if (imgs.length > 0) {
+                        // Get the last non-shadow image (usually the main plant image)
+                        imageSrc = imgs[imgs.length - 1].src;
+                    }
                 }
-                // Method 1c: Construct from EName (oSunFlower -> SunFlower)
-                if (!imageSrc && ename) {
-                    const plantName = ename.startsWith('o') ? ename.substring(1) : ename;
+                
+                // Method 3: Use PicArr if available (prototype array)
+                if (!imageSrc && plant.PicArr && plant.PicArr.length > 0) {
+                    // NormalGif index typically points to the animated GIF
+                    const gifIndex = plant.NormalGif || 2;
+                    if (plant.PicArr[gifIndex]) {
+                        imageSrc = plant.PicArr[gifIndex];
+                    } else if (plant.PicArr[2]) {
+                        imageSrc = plant.PicArr[2];
+                    } else if (plant.PicArr[1]) {
+                        imageSrc = plant.PicArr[1];
+                    }
+                }
+                
+                // Method 4: Construct standard path from EName
+                if (!imageSrc && plantName) {
                     imageSrc = `images/Plants/${plantName}/${plantName}.gif`;
                 }
 
-                // DEBUG: Show raw plant data
+                // Get display name
                 const displayName = plant.CName || (ename.startsWith('o') ? ename.substring(1) : ename) || 'Plant';
-                console.log(`[Plant] ${displayName}: R=${plant.R}, C=${plant.C}, Image=${imageSrc ? '✅' : '❌'}`);
 
                 plants.push({
                     row: plant.R,
@@ -347,8 +608,6 @@
 
         // Read from $Z object (game's zombie registry)
         if (typeof $Z !== 'undefined') {
-            console.log('[PanelBridge] 🧟 $Z keys:', Object.keys($Z).length);
-            
             for (let key in $Z) {
                 const zombie = $Z[key];
                 if (!zombie || zombie.R === undefined) continue;
@@ -361,9 +620,6 @@
                 // Get zombie name
                 const ename = zombie.EName || '';
                 const zombieName = ename.startsWith('o') ? ename.substring(1) : (ename || 'Zombie');
-
-                // DEBUG: Show raw zombie data
-                console.log(`[Zombie] ${zombieName}: X=${x.toFixed(0)}px → Col ${col}, R=${zombie.R}, HP=${zombie.HP}`);
 
                 // Try multiple methods to get image
                 let imageSrc = '';
@@ -435,7 +691,6 @@
                 
                 const ename = item.EName || '';
                 if (ename.includes('LawnCleaner') || ename.includes('PoolCleaner') || ename.includes('Cleaner')) {
-                    console.log(`[Lawnmower] ${ename}: R=${item.R} (from $P)`);
                     lawnmowers.push({ row: item.R });
                 }
             }
@@ -575,6 +830,4 @@
         getPlantPositions: getPlantPositions,
         getZombiePositions: getZombiePositions
     };
-
-    console.log('[PanelBridge] Initialized - Ready to communicate with parent panel');
 })();

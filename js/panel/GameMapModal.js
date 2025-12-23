@@ -17,12 +17,15 @@ const GameMapModal = (function() {
         zombies: [],
         lawnmowers: [],
         zombieCount: 0,
-        plantCount: 0
+        plantCount: 0,
+        shovelAvailable: false // Track if shovel is available in level
     };
     let _overlay = null;
     let _updateInterval = null;
     let _isDragging = false;
     let _dragOffsets = { x: 0, y: 0 };
+    let _isPlantingMode = false; // Whether a card is selected for placement
+    let _isShovelMode = false; // Whether shovel mode is active
 
     /**
      * Initialize the widget
@@ -46,7 +49,10 @@ const GameMapModal = (function() {
             <div class="game-map-modal" id="gameMapModal">
                 <div class="game-map-header" id="gameMapHeader">
                     <h2>🗺️ Map <span class="plant-badge" id="mapPlantCount">0🌱</span> <span class="stats-badge" id="mapZombieCount">0🧟</span></h2>
-                    <button class="game-map-close" onclick="GameMapModal.close()" title="Close">✕</button>
+                    <div class="map-header-actions">
+                        <button class="map-shovel-btn" id="mapShovelBtn" onclick="GameMapModal.toggleShovel()" title="Shovel - Remove Plants">🪏</button>
+                        <button class="game-map-close" onclick="GameMapModal.close()" title="Close">✕</button>
+                    </div>
                 </div>
                 <div class="game-map-content" id="gameMapContent">
                     <div class="map-loading">
@@ -178,7 +184,6 @@ const GameMapModal = (function() {
         const minRow = activeRows.length > 0 ? Math.min(...activeRows) : 1;
         const maxRow = activeRows.length > 0 ? Math.max(...activeRows) : 5;
         
-        console.log('[GameMapModal] Active rows:', activeRows.join(',') || 'Default 1-5', `(min:${minRow}, max:${maxRow})`);
 
         // Column headers
         let colHeaderHTML = '<div class="map-grid-header"><div class="map-col-label"></div>';
@@ -243,7 +248,21 @@ const GameMapModal = (function() {
                     cellContent += `<span class="entity-count" style="background:rgba(139,92,246,0.8);">${zombiesHere.length}🧟</span>`;
                 }
 
-                rowsHTML += `<div class="map-cell ${cellClass}">${cellContent}</div>`;
+                // Add planting mode class and click handler for valid cells (land/water, col 1-9)
+                const isPlantable = (cellClass === 'land' || cellClass === 'water') && col >= 1 && col <= 9;
+                const hasPlant = plantsHere.length > 0;
+                
+                // Determine cell mode classes
+                let modeClass = '';
+                if (_isShovelMode && hasPlant) {
+                    modeClass = 'shovelable';
+                } else if (_isPlantingMode && isPlantable) {
+                    modeClass = 'plantable';
+                }
+                
+                const clickHandler = isPlantable ? `onclick="GameMapModal.onCellClick(${row}, ${col}, event)"` : '';
+                
+                rowsHTML += `<div class="map-cell ${cellClass} ${modeClass}" data-row="${row}" data-col="${col}" ${clickHandler}>${cellContent}</div>`;
             }
 
             rowsHTML += `</div>`;
@@ -306,11 +325,120 @@ const GameMapModal = (function() {
         _isOpen ? close() : open();
     }
 
+    /**
+     * Set planting mode (called by GameStatsModal when card is selected)
+     */
+    function setPlantingMode(enabled) {
+        _isPlantingMode = enabled;
+        if (_isOpen) {
+            _renderMap(); // Re-render to update cell styles
+        }
+    }
+
+    /**
+     * Handle cell click for plant placement or shovel
+     */
+    function onCellClick(row, col, event) {
+        // Handle shovel mode
+        if (_isShovelMode) {
+            console.log('[GameMapModal] Shoveling at row:', row, 'col:', col);
+            
+            // Send message to game iframe to remove the plant
+            const frame = document.getElementById('gameFrame');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.postMessage({
+                    action: 'shovelPlant',
+                    row: row,
+                    col: col
+                }, '*');
+            }
+            return;
+        }
+        
+        // Handle planting mode
+        if (!_isPlantingMode) {
+            console.log('[GameMapModal] Not in planting mode');
+            return;
+        }
+        
+        // Get selected card from GameStatsModal
+        if (typeof GameStatsModal === 'undefined' || !GameStatsModal.getSelectedCard) {
+            console.error('[GameMapModal] GameStatsModal not available');
+            return;
+        }
+        
+        const selection = GameStatsModal.getSelectedCard();
+        if (!selection) {
+            console.log('[GameMapModal] No card selected');
+            return;
+        }
+        
+        console.log('[GameMapModal] Placing plant:', selection.card.name, 'at row:', row, 'col:', col);
+        
+        // Send message to game iframe to place the plant
+        const frame = document.getElementById('gameFrame');
+        if (frame && frame.contentWindow) {
+            frame.contentWindow.postMessage({
+                action: 'placePlant',
+                cardIndex: selection.index,
+                row: row,
+                col: col
+            }, '*');
+        }
+        
+        // Clear the selection after attempting placement
+        GameStatsModal.clearSelection();
+    }
+
+    /**
+     * Toggle shovel mode
+     */
+    function toggleShovel() {
+        _isShovelMode = !_isShovelMode;
+        
+        // Update button visual
+        const btn = document.getElementById('mapShovelBtn');
+        if (btn) {
+            btn.classList.toggle('active', _isShovelMode);
+        }
+        
+        // Clear planting mode if enabling shovel
+        if (_isShovelMode && _isPlantingMode) {
+            _isPlantingMode = false;
+            if (typeof GameStatsModal !== 'undefined' && GameStatsModal.clearSelection) {
+                GameStatsModal.clearSelection();
+            }
+        }
+        
+        console.log('[GameMapModal] Shovel mode:', _isShovelMode ? 'ON' : 'OFF');
+        
+        // Re-render map to update cell styles
+        if (_isOpen) {
+            _renderMap();
+        }
+    }
+
+    /**
+     * Disable shovel mode (called externally)
+     */
+    function disableShovel() {
+        if (_isShovelMode) {
+            _isShovelMode = false;
+            const btn = document.getElementById('mapShovelBtn');
+            if (btn) btn.classList.remove('active');
+            if (_isOpen) _renderMap();
+        }
+    }
+
     return {
         init,
         open,
         close,
-        toggle
+        toggle,
+        setPlantingMode,
+        onCellClick,
+        toggleShovel,
+        disableShovel
     };
 })();
 

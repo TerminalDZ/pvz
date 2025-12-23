@@ -1,0 +1,49 @@
+# PVZ Game Panel - Walkthrough
+
+## Features
+
+### 📊 Game Stats Widget (Bottom-Right)
+- Sun count (current, uncollected, potential)
+- Plant cards with affordability (gray = too expensive)
+- Draggable, non-blocking
+
+### 🗺️ Level Map Widget (Top-Left)
+- Real-time grid showing columns 0-11, rows 1-5+
+- Plant positions with images
+- Zombie positions with images
+- Lawnmower locations
+- Lane types color-coded (land, water)
+- Draggable, non-blocking
+
+---
+
+## Usage
+
+1. **Start a level** → "📊 Game Panel" button appears in top-right
+2. **Click button** → Opens BOTH widgets simultaneously
+3. **Drag** either widget by its header to reposition
+4. **Close** with ✕ button on each widget
+
+---
+
+## Bug Fixes Applied
+
+| Issue | Fix |
+|-------|-----|
+| Map modal covered screen | Converted to floating widget (pass-through) |
+| Row numbering mismatch | Fixed [pixelToRow](file:///c:/Users/Idriss%20Boukmouche/Downloads/pvz-main/js/panel/PanelBridge.js#476-506) to use 1-based mapping |
+| Zombie position inaccurate | Improved X-to-column conversion |
+| Plant images missing | Added fallback path construction from EName |
+| Two separate buttons | Merged into single "Game Panel" button |
+
+---
+
+## Files Modified
+
+| File | Changes |
+|------|---------|
+| [GameMapModal.css](file:///c:/Users/Idriss%20Boukmouche/Downloads/pvz-main/js/panel/GameMapModal.css) | Floating widget style |
+| [GameMapModal.js](file:///c:/Users/Idriss%20Boukmouche/Downloads/pvz-main/js/panel/GameMapModal.js) | Drag support, row detection fix |
+| [PanelBridge.js](file:///c:/Users/Idriss%20Boukmouche/Downloads/pvz-main/js/panel/PanelBridge.js) | Fixed [pixelToRow](file:///c:/Users/Idriss%20Boukmouche/Downloads/pvz-main/js/panel/PanelBridge.js#476-506), improved image detection |
+| [GameStatsModal.js](file:///c:/Users/Idriss%20Boukmouche/Downloads/pvz-main/js/panel/GameStatsModal.js) | Updated to use unified button |
+| [index.html](file:///c:/Users/Idriss%20Boukmouche/Downloads/pvz-main/index.html) | Single unified `gamePanelBtn` |

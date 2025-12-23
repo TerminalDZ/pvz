@@ -259,6 +259,41 @@
     opacity: 0.8;
 }
 
+/* State: Selected (Ready to place) */
+.card-item.selected {
+    border: 2px solid #4caf50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+    background: rgba(76, 175, 80, 0.15);
+}
+
+.card-item.selected::before {
+    content: '✓';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    background: #4caf50;
+    color: white;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Clickable cards (affordable + not on cooldown) */
+.card-item.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.card-item.clickable:hover {
+    transform: scale(1.05);
+    border-color: rgba(76, 175, 80, 0.5);
+    background: rgba(76, 175, 80, 0.1);
+}
+
 /* --- Loading / Empty States --- */
 .loading-state, .empty-state {
     display: flex;
@@ -282,4 +317,28 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* --- Sun-Free Badge (Wall-nut Bowling, I Zombie, etc.) --- */
+.sun-free-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.15));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+}
+
+.sun-free-icon {
+    font-size: 18px;
+}
+
+.sun-free-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #a78bfa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }

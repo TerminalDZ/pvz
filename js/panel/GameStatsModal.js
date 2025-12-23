@@ -19,6 +19,7 @@ const GameStatsModal = (function() {
     let _overlay = null;
     let _dragOffsets = { x: 0, y: 0 };
     let _isDragging = false;
+    let _selectedCardIndex = null; // Track selected card for placement
 
     /**
      * Initialize the widget system
@@ -109,7 +110,8 @@ const GameStatsModal = (function() {
                     uncollectedSun: e.data.uncollectedSun || { count: 0, value: 0 },
                     cards: e.data.cards || [],
                     isPlaying: e.data.isPlaying || false,
-                    levelName: e.data.levelName || ''
+                    levelName: e.data.levelName || '',
+                    isSunFree: e.data.isSunFree || false
                 };
                 
                 if (_isOpen) {
@@ -174,7 +176,7 @@ const GameStatsModal = (function() {
         // Build cards HTML (Compact)
         let cardsHTML = '';
         if (_gameData.cards.length > 0) {
-            cardsHTML = _gameData.cards.map(card => {
+            cardsHTML = _gameData.cards.map((card, index) => {
                 let statusClass = '';
                 
                 // Determine class based on state
@@ -187,10 +189,21 @@ const GameStatsModal = (function() {
                     statusClass = 'cooldown'; // Dark
                 }
 
+                // Hide cost in sun-free levels
+                const costDisplay = _gameData.isSunFree ? '' : `<div class="card-cost">${card.cost}</div>`;
+
+                // Check if this card is selected
+                const selectedClass = _selectedCardIndex === index ? 'selected' : '';
+                
+                // Only allow clicking on affordable and non-cooldown cards
+                const isClickable = card.canAfford && !card.isCooldown;
+                const clickHandler = isClickable ? `onclick="GameStatsModal.selectCard(${index})"` : '';
+                const clickableClass = isClickable ? 'clickable' : '';
+                
                 return `
-                <div class="card-item ${statusClass}">
-                    <img src="${card.image}" alt="${card.name}" title="${card.name} (${card.cost})">
-                    <div class="card-cost">${card.cost}</div>
+                <div class="card-item ${statusClass} ${selectedClass} ${clickableClass}" data-card-index="${index}" ${clickHandler}>
+                    <img src="${card.image}" alt="${card.name}" title="${card.name}${_gameData.isSunFree ? '' : ` (${card.cost})`}">
+                    ${costDisplay}
                 </div>
                 `;
             }).join('');
@@ -201,8 +214,19 @@ const GameStatsModal = (function() {
         const stats = _gameData.uncollectedSun || { count: 0, value: 0 };
         const totalPotential = _gameData.sunCount + (stats.value || 0);
 
-        content.innerHTML = `
-            <!-- Compact Sun Stats Grid -->
+        // Sun-free mode: Show badge instead of sun stats
+        let sunStatsHTML = '';
+        if (_gameData.isSunFree) {
+            sunStatsHTML = `
+            <div class="sun-stats-section">
+                <div class="sun-free-badge">
+                    <span class="sun-free-icon">🎮</span>
+                    <span class="sun-free-text">Sun Not Required</span>
+                </div>
+            </div>
+            `;
+        } else {
+            sunStatsHTML = `
             <div class="sun-stats-section">
                 <div class="sun-stats-grid">
                     <div class="sun-stat-item">
@@ -223,6 +247,11 @@ const GameStatsModal = (function() {
                     </div>
                 </div>
             </div>
+            `;
+        }
+
+        content.innerHTML = `
+            ${sunStatsHTML}
 
             <!-- Cards ScrollView -->
             <div class="cards-section">
@@ -269,12 +298,68 @@ const GameStatsModal = (function() {
         _isOpen ? close() : open();
     }
 
+    /**
+     * Select a card for placement
+     */
+    function selectCard(cardIndex) {
+        const card = _gameData.cards[cardIndex];
+        if (!card) return;
+        
+        // Validate card is usable
+        if (!card.canAfford || card.isCooldown) {
+            console.log('[GameStatsModal] Card not available:', card.name);
+            return;
+        }
+        
+        // Toggle selection
+        if (_selectedCardIndex === cardIndex) {
+            _selectedCardIndex = null;
+            console.log('[GameStatsModal] Card deselected');
+        } else {
+            _selectedCardIndex = cardIndex;
+            console.log('[GameStatsModal] Card selected:', card.name, 'index:', cardIndex);
+        }
+        
+        // Re-render to update selection visuals
+        _renderContent();
+        
+        // Notify GameMapModal about selection change
+        if (typeof GameMapModal !== 'undefined' && GameMapModal.setPlantingMode) {
+            GameMapModal.setPlantingMode(_selectedCardIndex !== null);
+        }
+    }
+
+    /**
+     * Clear card selection
+     */
+    function clearSelection() {
+        _selectedCardIndex = null;
+        _renderContent();
+        if (typeof GameMapModal !== 'undefined' && GameMapModal.setPlantingMode) {
+            GameMapModal.setPlantingMode(false);
+        }
+    }
+
+    /**
+     * Get currently selected card data
+     */
+    function getSelectedCard() {
+        if (_selectedCardIndex === null) return null;
+        return {
+            index: _selectedCardIndex,
+            card: _gameData.cards[_selectedCardIndex]
+        };
+    }
+
     // Public API
     return {
         init,
         open,
         close,
-        toggle
+        toggle,
+        selectCard,
+        clearSelection,
+        getSelectedCard
     };
 })();
 

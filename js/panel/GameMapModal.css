@@ -106,6 +106,42 @@
     color: #f85149;
 }
 
+/* --- Header Actions Container --- */
+.map-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- Shovel Button --- */
+.map-shovel-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #8b949e;
+    font-size: 16px;
+    cursor: pointer;
+    width: 32px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.map-shovel-btn:hover {
+    background: rgba(244, 67, 54, 0.15);
+    border-color: rgba(244, 67, 54, 0.3);
+    color: #f44336;
+}
+
+.map-shovel-btn.active {
+    background: rgba(244, 67, 54, 0.2);
+    border-color: #f44336;
+    color: #f44336;
+    box-shadow: 0 0 8px rgba(244, 67, 54, 0.4);
+}
+
 /* --- Content Area --- */
 .game-map-content {
     padding: 12px;
@@ -211,7 +247,41 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    transition: background 0.2s;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+/* Plantable cells (when in planting mode) */
+.map-cell.plantable {
+    cursor: pointer;
+    animation: plantable-pulse 1.5s ease-in-out infinite;
+}
+
+.map-cell.plantable:hover {
+    background: rgba(76, 175, 80, 0.35) !important;
+    box-shadow: inset 0 0 8px rgba(76, 175, 80, 0.5);
+    border-color: #4caf50;
+}
+
+@keyframes plantable-pulse {
+    0%, 100% { box-shadow: inset 0 0 2px rgba(76, 175, 80, 0.2); }
+    50% { box-shadow: inset 0 0 6px rgba(76, 175, 80, 0.4); }
+}
+
+/* Shovelable cells (when in shovel mode with plants) */
+.map-cell.shovelable {
+    cursor: pointer;
+    animation: shovelable-pulse 1.2s ease-in-out infinite;
+}
+
+.map-cell.shovelable:hover {
+    background: rgba(244, 67, 54, 0.35) !important;
+    box-shadow: inset 0 0 8px rgba(244, 67, 54, 0.5);
+    border-color: #f44336;
+}
+
+@keyframes shovelable-pulse {
+    0%, 100% { box-shadow: inset 0 0 2px rgba(244, 67, 54, 0.2); }
+    50% { box-shadow: inset 0 0 6px rgba(244, 67, 54, 0.4); }
 }
 
 .map-cell.water {
