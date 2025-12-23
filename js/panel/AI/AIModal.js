@@ -310,6 +310,21 @@ const AIModal = (function() {
     }
 
     /**
+     * Decode action index to human-readable description
+     * Action space: 0-97 = plant (cardIndex * 9 + col-1), 98 = collect suns, 99 = wait
+     */
+    function _decodeAction(actionIndex) {
+        if (actionIndex === 99) return 'Wait';
+        if (actionIndex === 98) return 'Collect Suns';
+        if (actionIndex >= 0 && actionIndex < 98) {
+            const cardIndex = Math.floor(actionIndex / 9);
+            const col = (actionIndex % 9) + 1;
+            return `Plant ${cardIndex + 1} → Col ${col}`;
+        }
+        return 'Unknown';
+    }
+
+    /**
      * Render Q-values as heatmap
      */
     function _renderQValues(qValues) {
@@ -323,7 +338,7 @@ const AIModal = (function() {
 
         let html = '';
         for (const item of top) {
-            const desc = AIBrain.decodeAction(item.index);
+            const desc = _decodeAction(item.index);
             const width = Math.min(100, Math.max(10, (item.value + 50) * 1.5));
             const color = item.value > 0 ? '#4caf50' : '#f44336';
             
@@ -424,7 +439,6 @@ const AIModal = (function() {
     function resetLearning() {
         if (confirm('Reset all AI learning? This cannot be undone.')) {
             AIMemory.reset();
-            AIBrain.init();
             _updateStats();
             console.log('[AIModal] Learning reset');
         }

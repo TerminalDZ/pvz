@@ -1127,6 +1127,27 @@
                     const stats = collectEpisodeStats(false);
                     notifyGameEnd(false, stats);
                     _currentLevelStarted = false;
+
+                    // Auto-restart level for AI training
+                    setTimeout(function() {
+                        // Check if AI is still active (via parent window message)
+                        if (window.parent) {
+                            window.parent.postMessage({ action: 'checkAIActive' }, '*');
+                        }
+                        
+                        // Directly restart level using game's function
+                        if (typeof SelectModal !== 'undefined' && typeof oS !== 'undefined') {
+                            console.log('[PanelBridge] Auto-restarting level ' + oS.Lvl + ' for AI training...');
+                            SelectModal(oS.Lvl);
+                        } else {
+                            // Fallback: try clicking
+                            const gameOverImg = document.getElementById('iGameOver');
+                            if (gameOverImg && gameOverImg.onclick) {
+                                console.log('[PanelBridge] Fallback: triggering onclick...');
+                                gameOverImg.onclick();
+                            }
+                        }
+                    }, 1500); // Wait 1.5 seconds before auto-restart
                 }
             }
 

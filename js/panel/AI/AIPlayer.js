@@ -674,12 +674,16 @@ const AIPlayer = (function() {
      */
     function _updateModal() {
         if (typeof AIModal !== 'undefined' && _agent) {
+            // Merge AIMemory stats with agent stats
+            const memoryStats = typeof AIMemory !== 'undefined' ? AIMemory.getStatistics() : {};
+            
             AIModal.update({
                 state: _currentState,
                 qValues: _agent.getQValues(_currentState),
                 thinking: _lastThinking || 'Thinking...',
                 log: _actionLog,
                 stats: {
+                    ...memoryStats,
                     epsilon: _agent.epsilon,
                     experienceCount: _agent.memory.length
                 },
