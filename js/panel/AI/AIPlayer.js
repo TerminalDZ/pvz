@@ -22,6 +22,7 @@ const AIPlayer = (function() {
     let _speed = 1; // 1 = normal, 2 = fast, 0.5 = slow
     let _prevGameState = null; // For reward calculation
     let _lastThinking = '';
+    let _lastLoss = 0;
 
     // DQN Agent
     let _agent = null;
@@ -300,6 +301,7 @@ const AIPlayer = (function() {
         // Train periodically
         if (Math.random() < 0.1) {
             _agent.train().then(loss => {
+                _lastLoss = loss;
                 if (loss > 0) log(`📚 Training loss: ${loss.toFixed(4)}`);
             });
         }
@@ -419,6 +421,31 @@ const AIPlayer = (function() {
             }
         }
         return -1;
+    }
+
+    /**
+     * Decode action index to description
+     */
+    function decodeAction(action) {
+        if (action === 45) return 'COLLECT_SUNS'; // Action 45 is collect (last index)
+        // if (action === 99) return 'WAIT'; // Wait is implicit/no-op? Or need explicit index?
+
+        // Action space is 0-44: 5 plants * 9 columns
+        // 0-8: Plant 0 (Sun)
+        // 9-17: Plant 1 (Pea)
+        // 18-26: Plant 2 (Wall)
+        // 27-35: Plant 3 (Mine)
+        // 36-44: Plant 4 (Instant)
+
+        const plantType = Math.floor(action / 9);
+        const col = (action % 9) + 1;
+        const plants = ['Sunflower', 'Peashooter', 'WallNut', 'PotatoMine', 'CherryBomb'];
+
+        if (plantType < plants.length) {
+            return `Plant ${plants[plantType]} at col ${col}`;
+        }
+
+        return `Action ${action}`;
     }
 
     /**
@@ -622,6 +649,7 @@ const AIPlayer = (function() {
 
         // Train on episode experience
         _agent.train().then(loss => {
+            _lastLoss = loss;
             log(`📚 Post-game training, loss: ${loss.toFixed(4)}`);
             _agent.save(); // Auto-save after game
         });
@@ -681,7 +709,9 @@ const AIPlayer = (function() {
                 log: _actionLog,
                 stats: {
                     epsilon: _agent.epsilon,
-                    experienceCount: _agent.memory.length
+                    experienceCount: _agent.memory.length,
+                    loss: _lastLoss,
+                    lastReward: _episodeReward // Approximating last reward with current episode accumulative, ideally average/step
                 },
                 gameState: _gameState
             });
@@ -698,6 +728,18 @@ const AIPlayer = (function() {
             episodeReward: _episodeReward,
             plantsPlaced: _plantsPlaced
         };
+    }
+
+    /**
+     * Reset agent (for learning reset)
+     */
+    function resetAgent() {
+        if (_agent) {
+            _agent.init(); // Re-init agent
+            _episodeReward = 0;
+            _actionLog = [];
+            log('🔄 Agent reset');
+        }
     }
 
     /**
@@ -721,6 +763,8 @@ const AIPlayer = (function() {
         togglePause,
         setSpeed,
         getStatus,
-        getLog
+        getLog,
+        decodeAction,
+        resetAgent
     };
 })();

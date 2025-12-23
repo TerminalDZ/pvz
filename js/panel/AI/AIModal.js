@@ -323,7 +323,11 @@ const AIModal = (function() {
 
         let html = '';
         for (const item of top) {
-            const desc = AIBrain.decodeAction(item.index);
+            // Use AIPlayer's decoder or fallback
+            const desc = (typeof AIPlayer !== 'undefined' && AIPlayer.decodeAction)
+                ? AIPlayer.decodeAction(item.index)
+                : `Action ${item.index}`;
+
             const width = Math.min(100, Math.max(10, (item.value + 50) * 1.5));
             const color = item.value > 0 ? '#4caf50' : '#f44336';
             
@@ -423,8 +427,12 @@ const AIModal = (function() {
      */
     function resetLearning() {
         if (confirm('Reset all AI learning? This cannot be undone.')) {
-            AIMemory.reset();
-            AIBrain.init();
+            // AIMemory.reset(); // Legacy
+            if (typeof AIPlayer !== 'undefined' && AIPlayer.resetAgent) {
+                AIPlayer.resetAgent();
+            } else {
+                location.reload();
+            }
             _updateStats();
             console.log('[AIModal] Learning reset');
         }
