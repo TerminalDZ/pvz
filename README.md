@@ -45,6 +45,29 @@
 - 🌞 **Auto-Collect** - Optional automatic sun collection
 - 📱 **Browser-Based** - No download required
 
+### 🎛️ Game Panel (NEW!)
+
+The new **Game Panel** provides enhanced control and monitoring directly from the UI:
+
+#### 📊 Game Stats Modal
+- Real-time sun count display
+- Plant cards with cooldown/affordability states
+- Click cards to **select plants for placement**
+
+#### 🗺️ Game Map Modal
+- Live mini-map of the battlefield
+- See all plants and zombies positions
+- **Click cells to place selected plants**
+- **🪏 Shovel button** to remove plants directly
+
+#### ☀️ Sun Tracker Modal
+- Real-time tracking of all uncollected suns
+- X/Y coordinates for each sun
+- **Click to collect** individual suns
+- **🌟 Collect All** button for convenience
+
+> All modals are **draggable** and can be repositioned anywhere on screen
+
 ---
 
 ## 🚀 Getting Started
@@ -95,6 +118,10 @@ Visit **[terminaldz.github.io/pvz](https://terminaldz.github.io/pvz/)** to play 
 | Remove Plant | Click shovel, then plant |
 | Collect Sun | Click on falling sun |
 | Pause Game | ESC or Menu button |
+| **Game Panel** | Click 📊 button in top bar |
+| **Sun Tracker** | Click ☀️ button in top bar |
+| **Modal Plant** | Select card → click map cell |
+| **Modal Shovel** | Click 🪏 → click plant cell |
 
 ---
 
@@ -103,12 +130,17 @@ Visit **[terminaldz.github.io/pvz](https://terminaldz.github.io/pvz/)** to play 
 ```
 pvz/
 ├── index.html          # Main game entry point
+├── game.html           # Game iframe content
 ├── js/                 # Game scripts
 │   ├── Cfunction.js    # Core game functions
 │   ├── CPlants.js      # Plant definitions
 │   ├── CZombie.js      # Zombie definitions
 │   ├── SaveSystem.js   # Save/Load functionality
-│   └── ...
+│   └── panel/          # NEW: Game Panel Modals
+│       ├── GameStatsModal.js/css
+│       ├── GameMapModal.js/css
+│       ├── SunTrackerModal.js/css
+│       └── PanelBridge.js
 ├── level/              # Level configurations (212 files)
 ├── images/             # Game graphics
 │   ├── Plants/         # Plant sprites
