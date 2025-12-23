@@ -62,12 +62,38 @@ var $User = (function () {
 
 })();
 
-// Global listener for cheats
+// Global listener for cheats and training control
 window.addEventListener('message', function(e) {
-    if (e.data && e.data.action === 'cheatSpawnSun') {
-        if (typeof AppearSun === 'function' && typeof oS !== 'undefined') {
-             // Spawn sun at random position: x=100-900, y=100-500, value=50
-            AppearSun(Math.floor(100 + Math.random() * 800), Math.floor(100 + Math.random() * 400), 50, 0);
+    if (e.data) {
+        if (e.data.action === 'cheatSpawnSun') {
+            if (typeof AppearSun === 'function' && typeof oS !== 'undefined') {
+                 // Spawn sun at random position: x=100-900, y=100-500, value=50
+                AppearSun(Math.floor(100 + Math.random() * 800), Math.floor(100 + Math.random() * 400), 50, 0);
+            }
+        }
+        else if (e.data.action === 'setGameSpeed') {
+            if (typeof oSym !== 'undefined') {
+                // Adjust game speed
+                if (e.data.speed > 1) {
+                    oSym.TimeStep = 1; // Max speed
+                } else {
+                    oSym.TimeStep = 10; // Normal speed
+                }
+
+                // Headless mode (hide rendering)
+                const body = document.getElementById('dBody');
+                if (body) {
+                    if (e.data.headless) {
+                        body.style.display = 'none';
+                        // Mute audio
+                        if (typeof StopMusic === 'function') StopMusic();
+                        if (typeof AllAudioMuted === 'function') AllAudioMuted();
+                    } else {
+                        body.style.display = 'block';
+                        if (typeof AllAudioMuteCanceled === 'function') AllAudioMuteCanceled();
+                    }
+                }
+            }
         }
     }
 });

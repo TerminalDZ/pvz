@@ -100,10 +100,16 @@ const AIModal = (function() {
                         <div class="ai-thinking" id="aiThinking">Waiting to start...</div>
                     </div>
 
-                    <!-- Neural Network Visualization -->
+                    <!-- Loss Graph -->
                     <div class="ai-network-box">
-                        <div class="ai-section-title">🔮 Neural Network</div>
-                        <canvas id="aiNetworkCanvas" width="300" height="120"></canvas>
+                        <div class="ai-section-title">📉 Loss</div>
+                        <canvas id="aiLossCanvas" width="300" height="80"></canvas>
+                    </div>
+
+                    <!-- Reward Graph -->
+                    <div class="ai-network-box">
+                        <div class="ai-section-title">🎁 Average Reward</div>
+                        <canvas id="aiRewardCanvas" width="300" height="80"></canvas>
                     </div>
 
                     <!-- Q-Values Heatmap -->
@@ -165,7 +171,7 @@ const AIModal = (function() {
         _isOpen = true;
         _overlay.classList.add('active');
         _updateStats();
-        _drawNetwork();
+        _drawGraphs();
     }
 
     /**
@@ -272,7 +278,7 @@ const AIModal = (function() {
 
         // Network
         if (data.state) {
-            _drawNetwork(data.state);
+            _drawGraphs(data);
         }
     }
 
@@ -347,76 +353,69 @@ const AIModal = (function() {
         ).join('');
     }
 
-    /**
-     * Draw neural network visualization
-     */
-    function _drawNetwork(state = []) {
-        const canvas = document.getElementById('aiNetworkCanvas');
-        if (!canvas) return;
+    // Historical data for graphs
+    let _lossHistory = Array(50).fill(0);
+    let _rewardHistory = Array(50).fill(0);
 
+    /**
+     * Draw real-time graphs
+     */
+    function _drawGraphs(data) {
+        if (data && data.stats) {
+            // Update history
+            if (data.stats.loss !== undefined) {
+                _lossHistory.push(data.stats.loss);
+                if (_lossHistory.length > 50) _lossHistory.shift();
+            }
+            if (data.stats.lastReward !== undefined) {
+                _rewardHistory.push(data.stats.lastReward);
+                if (_rewardHistory.length > 50) _rewardHistory.shift();
+            }
+        }
+
+        _drawGraph('aiLossCanvas', _lossHistory, '#f44336', 'Loss');
+        _drawGraph('aiRewardCanvas', _rewardHistory, '#4caf50', 'Reward');
+    }
+
+    function _drawGraph(canvasId, data, color, label) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
         const W = canvas.width;
         const H = canvas.height;
 
         ctx.clearRect(0, 0, W, H);
 
-        // Network layers
-        const layers = [
-            { nodes: 8, x: 40, label: 'Input' },     // Show 8 input nodes
-            { nodes: 6, x: 130, label: 'Hidden' },   // Show 6 hidden nodes
-            { nodes: 4, x: 220, label: 'Output' }    // Show 4 output nodes
-        ];
-
-        // Draw connections (simplified)
-        ctx.strokeStyle = 'rgba(76, 175, 80, 0.2)';
+        // Background grid
+        ctx.strokeStyle = '#30363d';
         ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, H/2);
+        ctx.lineTo(W, H/2);
+        ctx.stroke();
 
-        for (let l = 0; l < layers.length - 1; l++) {
-            const layer1 = layers[l];
-            const layer2 = layers[l + 1];
+        // Data line
+        const max = Math.max(...data, 1);
+        const min = Math.min(...data, -1);
+        const range = max - min || 1;
 
-            for (let i = 0; i < layer1.nodes; i++) {
-                for (let j = 0; j < layer2.nodes; j++) {
-                    const y1 = (H / (layer1.nodes + 1)) * (i + 1);
-                    const y2 = (H / (layer2.nodes + 1)) * (j + 1);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
 
-                    ctx.beginPath();
-                    ctx.moveTo(layer1.x, y1);
-                    ctx.lineTo(layer2.x, y2);
-                    ctx.stroke();
-                }
-            }
-        }
+        data.forEach((val, i) => {
+            const x = (i / (data.length - 1)) * W;
+            // Normalize to canvas height (inverted Y)
+            const y = H - ((val - min) / range) * (H - 10) - 5;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
 
-        // Draw nodes
-        for (const layer of layers) {
-            for (let i = 0; i < layer.nodes; i++) {
-                const y = (H / (layer.nodes + 1)) * (i + 1);
-                
-                // Node activation (from state if input layer)
-                let activation = 0.5;
-                if (layer.label === 'Input' && state[i] !== undefined) {
-                    activation = state[i];
-                }
-
-                const green = Math.round(100 + activation * 155);
-                ctx.fillStyle = `rgb(50, ${green}, 50)`;
-                
-                ctx.beginPath();
-                ctx.arc(layer.x, y, 8, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.strokeStyle = '#4caf50';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-
-            // Label
-            ctx.fillStyle = '#8b949e';
-            ctx.font = '10px Inter';
-            ctx.textAlign = 'center';
-            ctx.fillText(layer.label, layer.x, H - 5);
-        }
+        // Last value label
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px Inter';
+        ctx.fillText(`${label}: ${data[data.length-1].toFixed(2)}`, 5, 15);
     }
 
     /**

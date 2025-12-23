@@ -21,6 +21,11 @@ const AIPlayer = (function() {
     let _actionLog = [];
     let _speed = 1; // 1 = normal, 2 = fast, 0.5 = slow
     let _prevGameState = null; // For reward calculation
+    let _lastThinking = '';
+
+    // DQN Agent
+    let _agent = null;
+    const STATE_SIZE = 145; // 5x9x3 (135) + 10 global features
 
     // Game state cache
     let _gameState = {
@@ -79,6 +84,15 @@ const AIPlayer = (function() {
     function init() {
         _gameFrame = document.getElementById('gameFrame');
         _setupMessageListener();
+
+        // Initialize DQN Agent
+        if (typeof DQNAgent !== 'undefined') {
+            _agent = new DQNAgent(STATE_SIZE, 100); // Keeping original output size for compatibility first
+            _agent.init();
+        } else {
+            console.error('[AIPlayer] DQNAgent class not found!');
+        }
+
         console.log('[AIPlayer] Initialized');
     }
 
@@ -191,6 +205,28 @@ const AIPlayer = (function() {
     }
 
     /**
+     * Toggle Hyper-Training Mode
+     */
+    function toggleTrainingMode(enabled) {
+        if (!_gameFrame || !_gameFrame.contentWindow) return;
+
+        // Send command to game to adjust speed/rendering
+        _gameFrame.contentWindow.postMessage({
+            action: 'setGameSpeed',
+            speed: enabled ? 100 : 1, // 100x speed vs normal
+            headless: enabled // Disable rendering
+        }, '*');
+
+        if (enabled) {
+            setSpeed(100); // AI thinks faster too
+            log('🚀 Hyper-Training Mode ENABLED');
+        } else {
+            setSpeed(1);
+            log('🐢 Training Mode DISABLED');
+        }
+    }
+
+    /**
      * Request game state from iframe
      */
     function _requestGameState() {
@@ -223,13 +259,11 @@ const AIPlayer = (function() {
                 action = cardIndex * 9 + (knowledgeRec.col - 1);
             } else {
                 // Fall back to brain
-                const epsilon = AIMemory.getStatistics().epsilon;
-                action = AIBrain.selectAction(state, epsilon, validActions);
+                action = _agent.predict(state, validActions);
             }
         } else {
             // Use neural network
-            const epsilon = AIMemory.getStatistics().epsilon;
-            action = AIBrain.selectAction(state, epsilon, validActions);
+            action = _agent.predict(state, validActions);
         }
 
         // Execute action and get action-specific reward
@@ -256,7 +290,7 @@ const AIPlayer = (function() {
 
         // Store experience
         if (_lastAction !== null) {
-            AIMemory.storeExperience(_lastAction.state, _lastAction.action, totalReward, state, false);
+            _agent.remember(_lastAction.state, _lastAction.action, totalReward, state, false);
         }
 
         _lastAction = { state: state, action: action };
@@ -265,11 +299,14 @@ const AIPlayer = (function() {
 
         // Train periodically
         if (Math.random() < 0.1) {
-            const batch = AIMemory.sampleBatch(16);
-            if (batch.length > 0) {
-                const loss = AIBrain.train(batch);
-                log(`📚 Training loss: ${loss.toFixed(4)}`);
-            }
+            _agent.train().then(loss => {
+                if (loss > 0) log(`📚 Training loss: ${loss.toFixed(4)}`);
+            });
+        }
+
+        // Update Target Network periodically
+        if (_gameFrame && Math.random() < 0.01) {
+            _agent.updateTargetModel();
         }
 
         // Update modal
@@ -277,16 +314,85 @@ const AIPlayer = (function() {
     }
 
     /**
-     * Build state vector from game state
+     * Build state vector from game state (Professional Grid Representation)
+     * State dimensions: 145
+     * - 5x9 Grid (45 cells) x 3 layers = 135 inputs
+     *   - Layer 1: Plant Type ID (0=None, 1=Sun, 2=Atk, 3=Wall, 4=Mine, 5=Instant)
+     *   - Layer 2: Zombie Density/Danger (Sum of HP/1000)
+     *   - Layer 3: Projectiles/Special Items (Boolean)
+     * - Global Features (10 inputs)
+     *   - Sun (1)
+     *   - Card Availability (9 slots)
      */
     function _buildStateVector() {
+        // Initialize layers
+        const plantGrid = Array(5).fill(0).map(() => Array(9).fill(0));
+        const zombieGrid = Array(5).fill(0).map(() => Array(9).fill(0));
+        const specialGrid = Array(5).fill(0).map(() => Array(9).fill(0));
+
+        // Populate Plant Grid
+        if (_gameState.plants) {
+            _gameState.plants.forEach(p => {
+                if (p.row >= 1 && p.row <= 5 && p.col >= 1 && p.col <= 9) {
+                    let typeId = 0;
+                    const name = p.name || '';
+                    if (name.includes('Sun') || name.includes('Flower')) typeId = 0.2;
+                    else if (name.includes('Pea') || name.includes('Snow') || name.includes('Gatling')) typeId = 0.4;
+                    else if (name.includes('Wall') || name.includes('Nut') || name.includes('Pumpkin')) typeId = 0.6;
+                    else if (name.includes('Potato') || name.includes('Mine')) typeId = 0.8;
+                    else typeId = 1.0; // Instants/Others
+
+                    plantGrid[p.row - 1][p.col - 1] = typeId;
+                }
+            });
+        }
+
+        // Populate Zombie Grid (Danger Map)
+        if (_gameState.zombies) {
+            _gameState.zombies.forEach(z => {
+                if (z.row >= 1 && z.row <= 5) {
+                    // Zombies move smoothly, map to nearest column bucket
+                    const col = Math.max(1, Math.min(9, Math.floor(z.col)));
+                    // Danger value based on HP (normalized approx)
+                    const danger = (z.hp || 200) / 1000;
+                    zombieGrid[z.row - 1][col - 1] += danger;
+                }
+            });
+        }
+
+        // Populate Special Grid (Sun drops)
+        if (_gameState.suns) {
+            _gameState.suns.forEach(s => {
+                // Map screen coordinates to grid approx
+                // 80px width per col, start ~250px?
+                // Simplified: just count total uncollected for now in global
+            });
+        }
+
+        // Flatten Grids
         const state = [];
+        for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 9; c++) {
+                state.push(plantGrid[r][c]);
+            }
+        }
+        for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 9; c++) {
+                state.push(Math.min(zombieGrid[r][c], 1)); // Cap danger at 1
+            }
+        }
+        for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 9; c++) {
+                state.push(specialGrid[r][c]); // Reserved/Sparse
+            }
+        }
 
-        // Normalized sun (0-1)
-        state.push(Math.min(_gameState.sun / 1000, 1));
+        // Global Features
+        state.push(Math.min(_gameState.sun / 1000, 1)); // Normalized Sun
 
-        // Cards (affordable, not on cooldown) - 10 slots
-        for (let i = 0; i < 10; i++) {
+        // Card States (Cooldown/Affordability)
+        // Only tracking first 9 cards to match action space
+        for (let i = 0; i < 9; i++) {
             const card = _gameState.cards[i];
             if (card && card.canAfford && !card.isCooldown) {
                 state.push(1);
@@ -295,44 +401,7 @@ const AIPlayer = (function() {
             }
         }
 
-        // Plants per row (5 rows × 2 = 10)
-        for (let row = 1; row <= 5; row++) {
-            const rowPlants = _gameState.plants.filter(p => p.row === row);
-            state.push(Math.min(rowPlants.length / 9, 1)); // Count normalized
-            
-            // Has sunflower?
-            const hasSunflower = rowPlants.some(p => 
-                p.name && (p.name.includes('Sun') || p.name.includes('Flower'))
-            );
-            state.push(hasSunflower ? 1 : 0);
-        }
-
-        // Zombies per row (5 rows × 3 = 15)
-        for (let row = 1; row <= 5; row++) {
-            const rowZombies = _gameState.zombies.filter(z => z.row === row);
-            state.push(Math.min(rowZombies.length / 10, 1)); // Count normalized
-            
-            // Nearest zombie distance (normalized 0-1, 1 = far)
-            if (rowZombies.length > 0) {
-                const nearest = Math.min(...rowZombies.map(z => z.col));
-                state.push(nearest / 9);
-            } else {
-                state.push(1);
-            }
-
-            // Has dangerous zombie?
-            const hasDangerous = rowZombies.some(z => 
-                z.name && (z.name.includes('Buckethead') || z.name.includes('Football') || z.name.includes('Gargantuar'))
-            );
-            state.push(hasDangerous ? 1 : 0);
-        }
-
-        // Uncollected suns
-        state.push(Math.min(_gameState.suns.length / 10, 1));
-
-        // Pad to INPUT_SIZE
-        while (state.length < 50) state.push(0);
-
+        // Total vector length = 45 + 45 + 45 + 1 + 9 = 145
         return state;
     }
 
@@ -552,11 +621,10 @@ const AIPlayer = (function() {
         });
 
         // Train on episode experience
-        const batch = AIMemory.sampleBatch(32);
-        if (batch.length > 0) {
-            const loss = AIBrain.train(batch);
+        _agent.train().then(loss => {
             log(`📚 Post-game training, loss: ${loss.toFixed(4)}`);
-        }
+            _agent.save(); // Auto-save after game
+        });
 
         _updateModal();
         
@@ -605,13 +673,16 @@ const AIPlayer = (function() {
      * Update modal display
      */
     function _updateModal() {
-        if (typeof AIModal !== 'undefined') {
+        if (typeof AIModal !== 'undefined' && _agent) {
             AIModal.update({
                 state: _currentState,
-                qValues: AIBrain.getQValues(),
-                thinking: AIBrain.getLastThinking(),
+                qValues: _agent.getQValues(_currentState),
+                thinking: _lastThinking || 'Thinking...',
                 log: _actionLog,
-                stats: AIMemory.getStatistics(),
+                stats: {
+                    epsilon: _agent.epsilon,
+                    experienceCount: _agent.memory.length
+                },
                 gameState: _gameState
             });
         }
