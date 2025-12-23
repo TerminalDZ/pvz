@@ -45,6 +45,11 @@
         if (e.data.action === 'collectAllSuns') {
             collectAllSuns();
         }
+
+        // Handle AI restart level request
+        if (e.data.action === 'restartLevel') {
+            restartCurrentLevel();
+        }
     });
 
     /**
@@ -358,6 +363,49 @@
             sendSunTrackerData();
             sendGameStats();
         }, 150);
+    }
+
+    // ============================================
+    // AI HELPER FUNCTIONS
+    // ============================================
+
+    /**
+     * Restart current level (for AI auto-retry)
+     */
+    function restartCurrentLevel() {
+        console.log('[PanelBridge] Restarting level...');
+        
+        // Try to find and click retry button
+        const retryBtn = document.querySelector('[onclick*="RetryLevel"]') || 
+                         document.querySelector('[onclick*="Retry"]') ||
+                         document.getElementById('btnRetry');
+        
+        if (retryBtn) {
+            retryBtn.click();
+            return;
+        }
+
+        // Alternative: reload level using oS
+        if (typeof oS !== 'undefined' && typeof LoadLevel === 'function') {
+            try {
+                LoadLevel(oS.Lvl);
+            } catch (e) {
+                console.error('[PanelBridge] Could not restart level:', e);
+            }
+        }
+    }
+
+    /**
+     * Notify parent of game end (for AI learning)
+     * Should be called from game's win/lose handlers
+     */
+    function notifyGameEnd(won) {
+        if (window.parent) {
+            window.parent.postMessage({
+                action: 'gameEnd',
+                won: won
+            }, '*');
+        }
     }
 
     // ============================================
@@ -944,6 +992,209 @@
         window.addEventListener('load', startAutoSend);
     }
 
+    // ============================================
+    // GAME END DETECTION HOOKS FOR AI
+    // ============================================
+
+    let _gameEndDetected = false;
+    let _gameEndCheckInterval = null;
+    let _currentLevelStarted = false;
+
+    /**
+     * Hook into game's win/lose functions to notify AI
+     */
+    function setupGameEndHooks() {
+        // Wait for game functions to be available
+        const checkInterval = setInterval(function() {
+            if (typeof GameOver !== 'undefined' && typeof oP !== 'undefined') {
+                clearInterval(checkInterval);
+                hookGameEnd();
+                startGameStatePolling();
+            }
+        }, 500);
+
+        function hookGameEnd() {
+            // Store original GameOver function
+            const originalGameOver = window.GameOver;
+            
+            // Hook GameOver (LOSE)
+            window.GameOver = function() {
+                console.log('[PanelBridge] Game LOST detected via GameOver()');
+                
+                if (!_gameEndDetected) {
+                    _gameEndDetected = true;
+                    
+                    // Collect episode statistics
+                    const stats = collectEpisodeStats(false);
+                    
+                    // Notify parent (AI)
+                    notifyGameEnd(false, stats);
+                }
+                
+                // Call original
+                originalGameOver.apply(this, arguments);
+            };
+
+            console.log('[PanelBridge] GameOver hook installed');
+        }
+    }
+
+    /**
+     * Polling-based game state detection for WIN condition
+     * This is more reliable than hooking since levels override FlagToEnd
+     */
+    let _zombiesHaveAppeared = false;
+    let _levelStartTime = 0;
+    const MIN_LEVEL_TIME = 5000; // Minimum 5 seconds before win detection
+
+    function startGameStatePolling() {
+        _gameEndCheckInterval = setInterval(function() {
+            // Check if game is actually playing with zombies on screen or FlagMeter visible
+            const flagMeter = document.getElementById('dFlagMeterContent');
+            const isActuallyPlaying = isGamePlaying() && flagMeter && flagMeter.style.visibility !== 'hidden';
+
+            // Reset detection when new level starts
+            if (isActuallyPlaying && !_currentLevelStarted) {
+                _currentLevelStarted = true;
+                _gameEndDetected = false;
+                _zombiesHaveAppeared = false;
+                _levelStartTime = Date.now();
+                console.log('[PanelBridge] Level started, detection reset');
+            }
+
+            // Track if zombies have ever appeared in this level
+            if (_currentLevelStarted && !_zombiesHaveAppeared) {
+                try {
+                    if (typeof $Z !== 'undefined' && Object.keys($Z).length > 1) {
+                        _zombiesHaveAppeared = true;
+                        console.log('[PanelBridge] Zombies appeared in level');
+                    }
+                } catch(e) {}
+            }
+
+            // Only allow win detection after zombies have appeared AND minimum time passed
+            const canDetectWin = _currentLevelStarted && 
+                                 !_gameEndDetected && 
+                                 _zombiesHaveAppeared &&
+                                 (Date.now() - _levelStartTime > MIN_LEVEL_TIME);
+
+            if (!canDetectWin) return;
+
+            // Check for WIN - "You got a new plant!" dialog (dNewPlant visible)
+            const newPlantDialog = document.getElementById('dNewPlant');
+            if (newPlantDialog && newPlantDialog.style.visibility === 'visible') {
+                _gameEndDetected = true;
+                console.log('[PanelBridge] WIN detected via dNewPlant dialog!');
+                
+                const stats = collectEpisodeStats(true);
+                notifyGameEnd(true, stats);
+                _currentLevelStarted = false;
+                return;
+            }
+
+            // Check for WIN - trophy image appears
+            const trophyImg = document.getElementById('imgSF');
+            if (trophyImg && trophyImg.src && trophyImg.src.includes('trophy')) {
+                _gameEndDetected = true;
+                console.log('[PanelBridge] WIN detected via trophy image!');
+                
+                const stats = collectEpisodeStats(true);
+                notifyGameEnd(true, stats);
+                _currentLevelStarted = false;
+                return;
+            }
+
+            // Check for WIN - card reward (only if dNewPlant parent is visible)
+            if (newPlantDialog && newPlantDialog.style.visibility === 'visible' && 
+                trophyImg && trophyImg.src && 
+                (trophyImg.src.includes('Card/Plants') || trophyImg.src.includes('Card/Zombies'))) {
+                _gameEndDetected = true;
+                console.log('[PanelBridge] WIN detected via card reward!');
+                
+                const stats = collectEpisodeStats(true);
+                notifyGameEnd(true, stats);
+                _currentLevelStarted = false;
+                return;
+            }
+
+            // Check for LOSE - ZombiesWon image
+            const loseImg = document.getElementById('iGameOver');
+            if (loseImg) {
+                if (!_gameEndDetected && _currentLevelStarted) {
+                    _gameEndDetected = true;
+                    console.log('[PanelBridge] LOSE detected via GameOver image!');
+                    
+                    const stats = collectEpisodeStats(false);
+                    notifyGameEnd(false, stats);
+                    _currentLevelStarted = false;
+                }
+            }
+
+            // Check if game is no longer playing
+            if (!isGamePlaying() && _currentLevelStarted && _gameEndDetected) {
+                _currentLevelStarted = false;
+            }
+
+        }, 500);
+    }
+
+    /**
+     * Collect detailed statistics for current episode
+     */
+    function collectEpisodeStats(won) {
+        const stats = {
+            won: won,
+            zombiesKilled: 0,
+            plantsPlaced: 0,
+            sunCollected: 0,
+            finalSun: 0,
+            level: 0,
+            timestamp: Date.now()
+        };
+
+        try {
+            // Get zombies killed
+            if (typeof oS !== 'undefined') {
+                stats.zombiesKilled = oS.ZombiesKilled || 0;
+                stats.finalSun = oS.SunNum || 0;
+                stats.level = oS.Lvl || 0;
+            }
+
+            // Count plants on field
+            if (typeof $P !== 'undefined') {
+                stats.plantsPlaced = $P.length || 0;
+            }
+
+            // Estimate sun collected based on start (50) + sunflower production
+            stats.sunCollected = Math.max(0, stats.finalSun - 50 + (stats.plantsPlaced * 100));
+
+        } catch (e) {
+            console.error('[PanelBridge] Error collecting stats:', e);
+        }
+
+        return stats;
+    }
+
+    /**
+     * Notify parent window of game end
+     */
+    function notifyGameEnd(won, stats) {
+        if (window.parent) {
+            window.parent.postMessage({
+                action: 'gameEnd',
+                won: won,
+                stats: stats
+            }, '*');
+        }
+    }
+
+    // Setup hooks when game loads
+    if (document.readyState === 'complete') {
+        setupGameEndHooks();
+    } else {
+        window.addEventListener('load', setupGameEndHooks);
+    }
+
     // Expose for debugging
     window.PanelBridge = {
         sendGameStats: sendGameStats,
@@ -953,6 +1204,8 @@
         getSelectedCards: getSelectedCards,
         isGamePlaying: isGamePlaying,
         getPlantPositions: getPlantPositions,
-        getZombiePositions: getZombiePositions
+        getZombiePositions: getZombiePositions,
+        notifyGameEnd: notifyGameEnd
     };
 })();
+

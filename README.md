@@ -66,6 +66,19 @@ The new **Game Panel** provides enhanced control and monitoring directly from th
 - **Click to collect** individual suns
 - **🌟 Collect All** button for convenience
 
+#### 🤖 AI Player (NEW!)
+An intelligent agent that learns to play the game using **reinforcement learning**:
+
+- **Neural Network Brain** - Q-learning with experience replay
+- **Learns from mistakes** - Improves win rate over time
+- **Auto-plays** - Places plants, collects suns automatically
+- **Visualization Modal** showing:
+  - Live neural network activity
+  - Decision log with reasoning
+  - Q-value heatmaps
+  - Learning statistics (win rate, games played)
+- **Auto-retry** on loss to keep learning
+
 > All modals are **draggable** and can be repositioned anywhere on screen
 
 ---
